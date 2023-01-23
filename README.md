@@ -1,2 +1,2 @@
-# Progetto-software-security-e-blockchain
+# Progetto Software Security & Blockchain
 Progetto software security
