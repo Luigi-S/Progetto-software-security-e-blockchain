@@ -1,0 +1,11 @@
+version: "3"
+services:
+  rpcs:
+    image: cyber:sec
+    container_name: ganaches
+    build: .
+    environment:
+      - BASE_PORT=10000
+      - TOP_PORT=10009
+    ports:
+      - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
