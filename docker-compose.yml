@@ -1,11 +1,15 @@
-version: "3"
 services:
-  rpcs:
-    image: cyber:sec
-    container_name: ganaches
-    build: .
-    environment:
-      - BASE_PORT=10000
-      - TOP_PORT=10009
+  app:
+    build: ./app
     ports:
-      - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
+      - "1000:1000"
+    volumes:
+      - ./app/:/app/
+  ganache:
+    image: trufflesuite/ganache:latest
+    container_name: ganache
+    volumes:
+      - ./ganache_data:/ganache_data
+    ports:
+      - "8545:8545"
+    command: --db=/ganache_data --mnemonic 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'

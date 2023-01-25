@@ -12,7 +12,6 @@
 import argparse
 from pathlib import Path
 import typer
-
 from compiler import Deployer, Caller
 
 title = """

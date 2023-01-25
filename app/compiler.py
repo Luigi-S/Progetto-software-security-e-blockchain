@@ -3,14 +3,14 @@ import os
 
 from web3 import Web3
 
-from solcx import compile_standard, install_solc
+from solcx import compile_standard
 
 class Deployer():
     #temp
-    chain_link = "ws://127.0.0.1:8545"
+    chain_link = "ws://ganache:8545"
     chain_id = 1337
-    my_address = "0x88Eb375bcec6Ed80a0a4A5d4551C47f0DE80Ce53"
-    private_key = "0x23c1f3e784d5317e3bb6a030f90eee9a6bbe279f8f70d8b2791c505ad7205888"
+    my_address = "0xa508dD875f10C33C52a8abb20E16fc68E981F186"
+    private_key = "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530"
     #temp
 
 
@@ -79,10 +79,10 @@ class Deployer():
 
 class Caller():
     # temp
-    chain_link = "ws://127.0.0.1:8545"
+    chain_link = "ws://ganache:8545"
     chain_id = 1337
-    my_address = "0x88Eb375bcec6Ed80a0a4A5d4551C47f0DE80Ce53"
-    private_key = "0x23c1f3e784d5317e3bb6a030f90eee9a6bbe279f8f70d8b2791c505ad7205888"
+    my_address = "0xa508dD875f10C33C52a8abb20E16fc68E981F186"
+    private_key = "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530"
     # temp
 
     def __init__(self, contract_address, abi):
