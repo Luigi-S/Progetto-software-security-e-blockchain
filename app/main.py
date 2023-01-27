@@ -1,18 +1,7 @@
-# MAPPING INPUTs
-"""
--l --log
--d --deploy
--c --call
-...?
--m --map
-"""
 
-# TYPER
-
-import argparse
 import binascii
 import json
-import os
+import re
 from pathlib import Path
 
 import solcx
