@@ -1,16 +1,18 @@
 import json
 import os
+from parser import ParserError
 
+from solcx.exceptions import SolcError
 from web3 import Web3
 
-from solcx import compile_standard
+from solcx import compile_standard, install_solc
 
 class Deployer():
     #temp
-    chain_link = "ws://ganache:8545"
+    chain_link = "ws://127.0.0.1:8545"
     chain_id = 1337
-    my_address = "0xa508dD875f10C33C52a8abb20E16fc68E981F186"
-    private_key = "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530"
+    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
     #temp
 
 
@@ -79,10 +81,10 @@ class Deployer():
 
 class Caller():
     # temp
-    chain_link = "ws://ganache:8545"
+    chain_link = "ws://127.0.0.1:8545"
     chain_id = 1337
-    my_address = "0xa508dD875f10C33C52a8abb20E16fc68E981F186"
-    private_key = "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530"
+    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
     # temp
 
     def __init__(self, contract_address, abi):
