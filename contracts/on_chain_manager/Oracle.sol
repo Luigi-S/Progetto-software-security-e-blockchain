@@ -22,9 +22,7 @@ contract Oracle is AbstractOracle {
         emit ChangedManager(newAddress);
     }
 
-    function deployChecked(uint256 id, bool result) external onlyOwner{
-        require(manager != AbstractManager(address(0)), "Manager not initialized.");
-        require(pendingDeploy[id].addr != bytes20(0), "Deploy request not found");
+    function deployChecked(uint256 id, bool result) external onlyOwner managerInitialized deployFound(id){
         delete pendingDeploy[id];
 
         if(result) {
@@ -35,8 +33,7 @@ contract Oracle is AbstractOracle {
         }
     }
 
-    function deleteChecked(uint256 id, bool result) external onlyOwner{
-        require(manager != AbstractManager(address(0)), "Manager not initialized.");
+    function deleteChecked(uint256 id, bool result) external onlyOwner managerInitialized deleteFound(id){
         require(pendingDelete[id].addr != bytes20(0), "Delete request not found");
         delete pendingDelete[id];
         
@@ -65,6 +62,20 @@ contract Oracle is AbstractOracle {
         _;
     }
 
+    modifier managerInitialized(){
+        require(manager != AbstractManager(address(0)), "Manager not initialized.");
+        _;
+    }
+
+    modifier deployFound(uint256 id){
+        require(pendingDeploy[id].addr != bytes20(0), "Deploy request not found");
+        _;
+    }
+
+    modifier deleteFound(uint256 id){
+        require(pendingDelete[id].addr != bytes20(0), "Deploy request not found");
+        _;
+    }
     //event
     event ChangedManager(address newAddress);
     event CheckDeployRequest(uint256 id, string shard, bytes20 addr);
