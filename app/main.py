@@ -95,23 +95,8 @@ def _deploy(path: str, abi):
     elif not target.is_dir():
         if target.suffix == ".sol":
             bytecode, abi = Deployer.compile(path)  # final version with Path
-        elif target.suffix == ".json":  # TODO: check arguments, QUAL é il FORMATO DEL BYTECODE???
-            try:
-                bytecode, abi = Deployer.compile(path)  # final version with Path
-                d = Deployer()
-                d.deploy(bytecode=bytecode, abi=abi)
-            except solcx.exceptions.SolcError as e:
-                print("ERROR: the file .sol isn't syntactically correct.")
-            except binascii.Error as e1:
-                print("ERROR: the file doesn't contains a valid bytecode.")
-                print(e1)
-            except UnboundLocalError as e2:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-                print("")
-            except TypeError as e3:
-                print(e3)
-            except Exception as e4:
-                print("ERROR: system error occurred.")
-
+            d = Deployer()
+            d.deploy(bytecode=bytecode, abi=abi)
         elif target.suffix == ".json":  #Il bytecode è scritto in json
             with open(path, "r") as file:
                 #bytecode = file.read()
