@@ -94,35 +94,20 @@ def _deploy(path: str, abi):
         raise SystemExit(1)
     elif not target.is_dir():
         if target.suffix == ".sol":
-            bytecode, abi = Deployer.compile(path)  # final version with Path
-        elif target.suffix == ".json":  # TODO: check arguments, QUAL é il FORMATO DEL BYTECODE???
             try:
                 bytecode, abi = Deployer.compile(path)  # final version with Path
                 d = Deployer()
                 d.deploy(bytecode=bytecode, abi=abi)
-            except solcx.exceptions.SolcError as e:
-                print("ERROR: the file .sol isn't syntactically correct.")
-            except binascii.Error as e1:
-                print("ERROR: the file doesn't contains a valid bytecode.")
-                print(e1)
-            except UnboundLocalError as e2:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-                print("")
-            except TypeError as e3:
-                print(e3)
-            except Exception as e4:
-                print("ERROR: system error occurred.")
-
-        elif target.suffix == ".json":  #Il bytecode è scritto in json
-            with open(path, "r") as file:
-                #bytecode = file.read()
-                data = json.load(file)
-                #bytecode = data["contracts"]["prova.sol"]["Prova"]["evm"]["bytecode"]
-                #abi = data["contracts"]["prova.sol"]["Prova"]["abi"]
-
-            #contract_name = os.path.basename(path)
-            bytecode = {}
-            abi = {}
+            except Exception:
+                raise SystemExit(1)
+        elif target.suffix == ".json" and abi == []:  #Il bytecode è scritto in json
             try:
+                with open(path, "r") as file:
+                    data = json.load(file)
+
+                bytecode = {}
+                abi = {}
+
                 items = data["contracts"].keys()
                 for item in items:
                     contracts = data["contracts"][item].keys()
@@ -131,18 +116,20 @@ def _deploy(path: str, abi):
                         abi[contract] = data["contracts"][item][contract]["abi"]
                 d = Deployer()
                 d.deploy(bytecode=bytecode[contract], abi=abi[contract])
-            except binascii.Error as e:
-                print("ERROR: the file doesn't contains a valid bytecode.")
-                #print(e)
-            except KeyError as e2:
-                print("ERROR: the file doesn't contains a valid bytecode.")
-            except UnboundLocalError:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-                print("")
-            except TypeError as e3:
-                print(e3)
-            except Exception as e4:
-                print("ERROR: system error occurred.")
-                #print(e4)
+            except Exception:
+                raise SystemExit(1)
+
+        elif target.suffix == ".json" and abi != [] and Path(abi).suffix == ".json":
+            try:
+                with open(path, "r") as file:
+                    bytecode = json.load(file)
+                with open(abi, "r") as file2:
+                    abi = json.load(file2)
+                d = Deployer()
+                d.deploy(bytecode=bytecode, abi=abi)
+            except Exception as e:
+                print(e.__class__)
+                raise SystemExit(1)
 
         else:
             print("Non valid input: impossible to find a deployable contract.")
