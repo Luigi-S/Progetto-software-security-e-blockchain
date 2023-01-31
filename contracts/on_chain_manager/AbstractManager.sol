@@ -4,6 +4,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AbstractOracle.sol";
 
 abstract contract AbstractManager is Ownable {
+    
+    enum Status{ NONE, RESERVED, PENDING_DEPLOY, DEPLOYED, PENDING_DELETE }
 
     struct Contract {
         uint8 shardId; 
@@ -11,7 +13,7 @@ abstract contract AbstractManager is Ownable {
         string name; //nome del contratto
         address user; //address dell'utente
         uint256 deployTime; //timestamp deploy
-        bool confirmed; //conferma del deploy
+        Status status;
         //altri parametri utili per algoritmi:
         //uint size; //dimensione contratto
     }
@@ -31,7 +33,7 @@ abstract contract AbstractManager is Ownable {
     Shard [] public shardList;
 
     //algoritmo selezionato
-    uint8 currentAlg;
+    uint8 private currentAlg;
 
     //shard round robin
     uint8 currentShard;
@@ -43,7 +45,7 @@ abstract contract AbstractManager is Ownable {
     AbstractOracle private oracle;
 
     //numero di deploy dichiarati
-    uint256 contractId;
+    uint256 public contractId;
 
     uint8 maxShard;
 
@@ -79,35 +81,6 @@ abstract contract AbstractManager is Ownable {
     function setShardStatus(uint8 shardId, bool status) external onlyOwner shardExists(shardId) {
         shardList[shardId].active = status;
     }
-    //utente
-
-    //calcola shard per deploy
-    function reserveDeploy() external atLeastOneShard returns(uint256, string memory){
-        uint8 shardId = algs[currentAlg]();
-        string memory url = "";
-        if(shardId < maxShard){
-            url = shardList[shardId].url;
-            contractId++;
-            deployMap[contractId] = Contract(shardId, bytes20(0), "", msg.sender, 0, false);
-            shardList[shardId].numDeploy++;
-            emit DeployReserved(contractId, shardId, url);
-        }
-        else{
-            revert("No shard available for deploy");
-        }
-        return (contractId, url);
-    }
-
-    //dichiara il deploy
-    function declareDeploy(uint256 id, bytes20 addr, string calldata name) external oracleInitialized checkDeployReserver(id) deployExists(id){
-        uint8 shardId = deployMap[id].shardId;
-        string memory shard = shardList[shardId].url;
-        deployMap[id].addr = addr;
-        deployMap[id].name = name;
-        deployMap[id].deployTime = block.timestamp;
-        oracle.checkDeploy(id, shard, addr);
-        emit DeployDeclared(id, shardId, shard, addr, name);
-    }
 
     //util
     function getInfoByDeployId(uint256 id) internal view returns(uint8, string memory, bytes20, string memory){
@@ -118,39 +91,76 @@ abstract contract AbstractManager is Ownable {
         return (shardId, shard, addr, name);
     }
 
+    //utente
+
+    //calcola shard per deploy
+    function reserveDeploy() external atLeastOneShard returns(uint256, string memory){
+        uint8 shardId = algs[currentAlg]();
+        string memory url = "";
+        if(shardId < maxShard){
+            url = shardList[shardId].url;
+            contractId++;
+            deployMap[contractId] = Contract(shardId, bytes20(0), "", msg.sender, 0, Status.RESERVED);
+            shardList[shardId].numDeploy++;
+            emit DeployReserved(contractId, shardId, url);
+        }
+        else{
+            revert("No shard available for deploy");
+        }
+        return (contractId, url);
+    }
+
+    //dichiara il deploy
+    function declareDeploy(uint256 id, bytes20 addr, string calldata name) external oracleInitialized checkDeployReserver(id)
+             deployCheckState(id,Status.RESERVED){
+        uint8 shardId = deployMap[id].shardId;
+        string memory shard = shardList[shardId].url;
+        deployMap[id].addr = addr;
+        deployMap[id].name = name;
+        deployMap[id].deployTime = block.timestamp;
+        deployMap[id].status = Status.PENDING_DEPLOY;
+        oracle.checkDeploy(id, shard, addr);
+        emit DeployDeclared(id, shardId, shard, addr, name);
+    }
+
     //dichiara l'eliminazione
-    function declareDel(uint256 id) external deployExists(id) oracleInitialized{
+    function declareDel(uint256 id) external oracleInitialized checkDeployReserver(id)
+             deployCheckState(id,Status.DEPLOYED) {
         (uint8 shardId, string memory shard, bytes20 addr, string memory name) = getInfoByDeployId(id);
         shardList[shardId].numDeploy--;
+        deployMap[id].status = Status.PENDING_DELETE;
         oracle.checkDelete(id, shard, addr);
         emit DeleteDeclared(id, shardId, shard, addr, name);
     }
 
     //va chiamata solo dopo il deploy e la verifica dell'oracolo
-    function confirmDeploy(uint256 id) external oracleInitialized onlyOracle deployExists(id){
-        deployMap[id].confirmed = true;
+    function fullfillDeploy(uint256 id, bool result) external oracleInitialized onlyOracle 
+             deployCheckState(id,Status.PENDING_DEPLOY){
         (uint8 shardId, string memory shard, bytes20 addr, string memory name) = getInfoByDeployId(id);
-        emit DeployConfirmed(id, shardId, shard, addr, name);
-    }
- 
-    //va chiamata solo dopo l'eliminazione e la verifica dell'oracolo
-    function delDeploy(uint256 id, bool isDeploy) external oracleInitialized onlyOracle deployExists(id){
-        (uint8 shardId, string memory shard, bytes20 addr, string memory name) = getInfoByDeployId(id);
-        delete deployMap[id];
-        if(isDeploy){
+        if(result){
+            deployMap[id].status = Status.DEPLOYED;
+            emit DeployConfirmed(id, shardId, shard, addr, name);
+        }
+        else{
+            delete deployMap[id]; //ok? oppure non eliminiamo e l'utente può riprovare a fare declareDeploy
             shardList[shardId].numDeploy--;
             emit DeployNotConfirmed(id, shardId, shard, addr, name);
         }
-        else{
+    }
+ 
+    //va chiamata solo dopo l'eliminazione e la verifica dell'oracolo
+    function fullfillDelete(uint256 id, bool result) external oracleInitialized onlyOracle 
+             deployCheckState(id, Status.PENDING_DELETE){
+        (uint8 shardId, string memory shard, bytes20 addr, string memory name) = getInfoByDeployId(id);
+        if(result){
+            delete deployMap[id];
             emit DeleteConfirmed(id, shardId, shard, addr, name);
         }
-    }
-
-    //chiamata quando una delete non è confermata
-    function failDelete(uint256 id) external oracleInitialized onlyOracle deployExists(id){
-        (uint8 shardId, string memory shard, bytes20 addr, string memory name) = getInfoByDeployId(id);
-        shardList[shardId].numDeploy++;
-        emit DeleteNotConfirmed(id, shardId, shard, addr, name);
+        else{
+            shardList[shardId].numDeploy++;
+            deployMap[id].status = Status.DEPLOYED;
+            emit DeleteNotConfirmed(id, shardId, shard, addr, name);    
+        }
     }
 
     //algoritmo di default
@@ -159,42 +169,42 @@ abstract contract AbstractManager is Ownable {
     //modifiers
 
     modifier onlyOracle() {
-        require(msg.sender == address(oracle), "Unauthorized.");
+        require(msg.sender == address(oracle), "Caller is not oracle");
         _;
     }
 
     modifier atLeastOneShard(){
-        require(shardList.length > 0, "There are no shards");
+        require(shardList.length > 0, "No shard registered");
         _;
     }
 
     modifier maxShards(){
-        require(shardList.length <= maxShard, "Shards limit reached");
+        require(shardList.length <= maxShard, "No more shard can be added");
         _;
     }
 
-    modifier deployExists(uint256 id){
-        require(deployMap[id].user != address(0), "Deploy not found");
+    modifier deployCheckState(uint256 id, Status status){
+        require(deployMap[id].status == status, "Deploy state error");
         _;
     }
 
     modifier oracleInitialized(){
-        require(oracle != AbstractOracle(address(0)), "Oracle not initialized.");
+        require(oracle != AbstractOracle(address(0)), "Oracle not initialized");
         _;
     }
 
     modifier shardExists(uint8 shardId){
-        require(shardId < shardList.length, "Shard not found");
+        require(shardId < shardList.length, "Shard does not exist");
         _;
     }
 
     modifier algExists(uint8 newAlg){
-        require(newAlg < algs.length, "Algorithm doesn't exist");
+        require(newAlg < algs.length, "Algorithm does not exist");
         _;
     }
 
     modifier checkDeployReserver(uint256 id){
-        require(deployMap[id].user == msg.sender);
+        require(deployMap[id].user == msg.sender, "Caller is not deploy reserver");
         _;
     }
 
