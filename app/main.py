@@ -126,7 +126,7 @@ def _deploy(path: str, abi):
                 with open(abi, "r") as file2:
                     abi = json.load(file2)
                 d = Deployer()
-                d.deploy(bytecode=bytecode, abi=abi)
+                d.deploy(bytecode=bytecode["object"], abi=abi)
             except Exception as e:
                 print(e.__class__)
                 raise SystemExit(1)

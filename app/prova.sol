@@ -4,7 +4,7 @@ pragma solidity >=0.6.0 <0.9.0;
 
 contract Prova {
 
-    uint256 matricola;
+    uint256 matricola
 
     struct Studente {
         uint256 matricola;
