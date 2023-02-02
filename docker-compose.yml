@@ -2,14 +2,19 @@ services:
   app:
     build: ./app
     ports:
-      - "1000:1000"
+      - "10010:10010"
     volumes:
       - ./app/:/app/
   ganache:
-    image: trufflesuite/ganache:latest
-    container_name: ganache
+    image: multi_ganache
+    container_name: blockchain
+    build:
+      dockerfile: /ganache_data/Dockerfile
     volumes:
       - ./ganache_data:/ganache_data
+    environment:
+      - BASE_PORT=10000
+      - TOP_PORT=10003
     ports:
-      - "8545:8545"
-    command: --db=/ganache_data --mnemonic 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
+      - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
+#command: --db=/ganache_data --mnemonic 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'

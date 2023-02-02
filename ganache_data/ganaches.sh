@@ -21,8 +21,7 @@ fi
 for (( i = 0 ; i < $ports ; i += 1 )) ; do
 	#add ganache parameters
 	#add logging
-	mkdir "/app/db_$i"
-	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "/app/db_$i" -d -a 1 -e 1000) &	
+	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "/ganache_data/db_$i" -d -a 5 -e 1000 ) &
 done
 
 wait
