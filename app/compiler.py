@@ -4,21 +4,32 @@ import os
 from parser import ParserError
 
 import solcx
+import websockets
 from solcx.exceptions import SolcError
 from web3 import Web3
 
 from solcx import compile_standard, install_solc
 
-
+class ConnectionHost():
+    def __init__(self):
+        self.chain_link = "ws://localhost:10002"
+        self.chain_id = 1337
+    def connect(self):
+        try:
+            web3 = Web3(Web3.WebsocketProvider(self.chain_link))
+            return web3
+        except TimeoutError as e1:
+            print("ERROR - timeout error:")
+            print(e1)
+        except websockets.exceptions.InvalidURI as e2:
+            print("ERROR - invalid URI:")
+            print(e2)
 class Deployer():
     # temp
-    chain_link = "ws://127.0.0.1:8545"
-    chain_id = 1337
     my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
     private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
 
     # temp
-
     @staticmethod
     # TODO: handle failed compilation
     def compile(contract_path):
@@ -77,8 +88,7 @@ class Deployer():
 
     def deploy(self, bytecode, abi):
         try:
-            w3 = Web3(
-                Web3.WebsocketProvider(self.chain_link))  # TODO: move all connection-related code outside of this class
+            w3 = ConnectionHost.connect() # TODO: move all connection-related code outside of this class
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
@@ -86,7 +96,7 @@ class Deployer():
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(
                 {
-                    "chainId": self.chain_id,
+                    "chainId": ConnectionHost().chain_id,
                     "gasPrice": w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": nonce,
@@ -121,16 +131,13 @@ class Deployer():
 
 class Caller():
     # temp
-    chain_link = "ws://127.0.0.1:8545"
-    chain_id = 1337
     my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
     private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
 
     # temp
 
     def __init__(self, contract_address, abi):
-        self.w3 = Web3(
-            Web3.WebsocketProvider(self.chain_link))  # TODO: move all connection-related code outside of this class
+        self.w3 = ConnectionHost.connect()
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
 
     def call(self, func_name, *param):
@@ -144,7 +151,7 @@ class Caller():
         if i != j:
             transaction = func(*param).buildTransaction(
                 {
-                    "chainId": self.chain_id,
+                    "chainId": ConnectionHost().chain_id,
                     "gasPrice": self.w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": self.w3.eth.getTransactionCount(self.my_address),
@@ -154,7 +161,7 @@ class Caller():
         else:
             transaction = func().buildTransaction(
                 {
-                    "chainId": self.chain_id,
+                    "chainId": ConnectionHost().chain_id,
                     "gasPrice": self.w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": self.w3.eth.getTransactionCount(self.my_address),
