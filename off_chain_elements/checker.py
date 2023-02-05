@@ -1,0 +1,1 @@
+print("Sono il checker e funziono!")
