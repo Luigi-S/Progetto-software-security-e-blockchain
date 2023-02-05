@@ -88,7 +88,7 @@ class Deployer():
 
     def deploy(self, bytecode, abi):
         try:
-            w3 = ConnectionHost.connect() # TODO: move all connection-related code outside of this class
+            w3 = ConnectionHost().connect() # TODO: move all connection-related code outside of this class
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
@@ -96,7 +96,7 @@ class Deployer():
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(
                 {
-                    "chainId": ConnectionHost().chain_id,
+                    "chainId": w3.eth.chain_id,
                     "gasPrice": w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": nonce,
@@ -137,7 +137,7 @@ class Caller():
     # temp
 
     def __init__(self, contract_address, abi):
-        self.w3 = ConnectionHost.connect()
+        self.w3 = ConnectionHost().connect()
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
 
     def call(self, func_name, *param):
@@ -151,7 +151,7 @@ class Caller():
         if i != j:
             transaction = func(*param).buildTransaction(
                 {
-                    "chainId": ConnectionHost().chain_id,
+                    "chainId": self.w3.eth.chain_id,
                     "gasPrice": self.w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": self.w3.eth.getTransactionCount(self.my_address),
@@ -161,7 +161,7 @@ class Caller():
         else:
             transaction = func().buildTransaction(
                 {
-                    "chainId": ConnectionHost().chain_id,
+                    "chainId": self.w3.eth.chain_id,
                     "gasPrice": self.w3.eth.gas_price,
                     "from": self.my_address,
                     "nonce": self.w3.eth.getTransactionCount(self.my_address),
