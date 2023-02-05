@@ -1,4 +1,3 @@
-
 import binascii
 import json
 import re
@@ -6,6 +5,7 @@ from pathlib import Path
 
 import solcx
 import typer
+from web3 import Web3
 
 from Log import Logger
 from solcx.exceptions import SolcError
@@ -77,8 +77,28 @@ def sign():
 
 
 @app.command()
+def initial_deploy():
+    initialize()
+    path = "app/contracts/on_chain_manager/onChain.sol"
+    target = Path(path)
+    if not target.exists():
+        print("Cannot find the on chain manager file.sol")
+        raise SystemExit(1)
+    elif not target.is_dir():
+        try:
+            bytecode, abi = Deployer.compile(path)  # final version with Path
+            d = Deployer()
+            d.deploy(bytecode=bytecode["Manager"], abi=abi["Manager"])
+            d.deploy(bytecode=bytecode["Oracle"], abi=abi["Oracle"])
+        except Exception as e:
+            print(e)
+            raise SystemExit(1)
+
+
+@app.command()
 def compile_deploy(bytecode: str, abi):
     _deploy(path=bytecode, abi=abi)
+
 
 @app.command()
 def deploy(path: str):
@@ -97,10 +117,11 @@ def _deploy(path: str, abi):
             try:
                 bytecode, abi = Deployer.compile(path)  # final version with Path
                 d = Deployer()
-                d.deploy(bytecode=bytecode, abi=abi)
+                for elem in bytecode:
+                    d.deploy(bytecode=bytecode[elem], abi=abi[elem])
             except Exception:
                 raise SystemExit(1)
-        elif target.suffix == ".json" and abi == []:  #Il bytecode è scritto in json
+        elif target.suffix == ".json" and abi == []:  # Il bytecode è scritto in json
             try:
                 with open(path, "r") as file:
                     data = json.load(file)
@@ -114,8 +135,10 @@ def _deploy(path: str, abi):
                     for contract in contracts:
                         bytecode[contract] = data["contracts"][item][contract]["evm"]["bytecode"]["object"]
                         abi[contract] = data["contracts"][item][contract]["abi"]
-                d = Deployer()
-                d.deploy(bytecode=bytecode[contract], abi=abi[contract])
+
+                for elem in bytecode:
+                    d = Deployer()
+                    d.deploy(bytecode=bytecode[elem][contract], abi=abi[elem][contract])
             except Exception:
                 raise SystemExit(1)
 
@@ -145,9 +168,24 @@ def call(address: str, abi, func: str, param):
     initialize()
     # TODO: controllare che l'address sia valido, se possibile
     caller = Caller(address, abi)
-    caller.call(func, param)
+    try:
+        caller.call(func, *param)
+    except TypeError as e:
+        caller.call(func, param)
     # Si puo pensare di semplificare quest'interazione aprendo un menu con i vari metodi e facendo scegliere il
     # metodo in un secondo momento
+
+@app.command()
+def prova():
+    file = ""
+    with open("app/compiled_contracts/Contratto.json", "r") as f:
+        file = f.read().__str__()
+        file.replace("\"", "\\\"")
+
+    #try:
+    call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709", abi=file, func="retrieve", param=(None))
+    #except Exception as e:
+    #    print(e)
 
 
 @app.command()
