@@ -117,27 +117,8 @@ def _deploy(path: str, abi):
                     d.deploy(bytecode=bytecode[elem], abi=abi[elem])
             except Exception:
                 raise SystemExit(1)
-        elif target.suffix == ".json" and abi == []:  # Il bytecode è scritto in json
-            try:
-                with open(path, "r") as file:
-                    data = json.load(file)
 
-                bytecode = {}
-                abi = {}
-
-                items = data["contracts"].keys()
-                for item in items:
-                    contracts = data["contracts"][item].keys()
-                    for contract in contracts:
-                        bytecode[contract] = data["contracts"][item][contract]["evm"]["bytecode"]["object"]
-                        abi[contract] = data["contracts"][item][contract]["abi"]
-
-                for elem in bytecode:
-                    d = Deployer()
-                    d.deploy(bytecode=bytecode[elem][contract], abi=abi[elem][contract])
-            except Exception:
-                raise SystemExit(1)
-
+        # DA SISTEMARE
         elif target.suffix == ".json" and abi != [] and Path(abi).suffix == ".json":
             try:
                 with open(path, "r") as file:
@@ -179,7 +160,7 @@ def prova():
         file.replace("\"", "\\\"")
 
     try:
-        call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709", abi=file, func="store", param=(5))
+        call(address="0x50e7D57bB32fE6B98783591d113722988A7AD5c8", abi=file, func="retrieve", param=(None))
     except Exception as e:
         print(e.__class__)
         raise SystemExit(1)

@@ -63,9 +63,6 @@ class Deployer():
                 with open("app/compiled_contracts/" + contract + ".json", "w") as file:
                     json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
-            with open("compiled_code.json", "w") as file:
-                json.dump(compiled_sol, file)
-
             # many contracts can be in a single .sol file
             bytecode = {}
             abi = {}
@@ -160,33 +157,46 @@ class Caller():
                 if elem is None:
                     j = j + 1
             if i != j:
-                transaction = func(*param).buildTransaction(
-                    {
-                        "chainId": self.w3.eth.chain_id,
-                        "gasPrice": self.w3.eth.gas_price,
-                        "from": self.my_address,
-                        "nonce": self.w3.eth.getTransactionCount(self.my_address),
-                    }
-                )
+                for obj in self.contract.abi:
+                    if obj["name"] == func_name and obj["stateMutability"] != "view":
+                        transaction = func(*param).buildTransaction(
+                            {
+                                "chainId": self.w3.eth.chain_id,
+                                "gasPrice": self.w3.eth.gas_price,
+                                "from": self.my_address,
+                                "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                            }
+                        )
+                        signed_transaction = self.w3.eth.account.sign_transaction(
+                            transaction_dict=transaction, private_key=self.private_key
+                        )
+                        tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
+                        # catcha gli eventi
+                        #event = self.contract.events.XXX().processReceipt(tx_receipt)
                 value_returned = func(*param).call()
             else:
-                transaction = func().buildTransaction(
-                    {
-                        "chainId": self.w3.eth.chain_id,
-                        "gasPrice": self.w3.eth.gas_price,
-                        "from": self.my_address,
-                        "nonce": self.w3.eth.getTransactionCount(self.my_address),
-                    }
-                )
+                for obj in self.contract.abi:
+                    if obj["name"] == func_name and obj["stateMutability"] != "view":
+                        transaction = func().buildTransaction(
+                            {
+                                "chainId": self.w3.eth.chain_id,
+                                "gasPrice": self.w3.eth.gas_price,
+                                "from": self.my_address,
+                                "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                            }
+                        )
+                        signed_transaction = self.w3.eth.account.sign_transaction(
+                            transaction_dict=transaction, private_key=self.private_key
+                        )
+                        tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
+                        # catcha gli eventi
+                        #event = self.contract.events.XXX().processReceipt(tx_receipt)
                 value_returned = func().call()
-            signed_transaction = self.w3.eth.account.sign_transaction(
-                transaction_dict=transaction, private_key=self.private_key
-            )
-            tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            print("Calling the contract... ")  # <-(tqdm)
-            tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
-            print("Function executed\n")
-            # print(tx_receipt)
+
+            print("Function executed")
+
         except web3.exceptions.InvalidAddress:
             print("The address doesn't exist.")
         except ValueError:
