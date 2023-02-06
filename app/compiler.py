@@ -1,19 +1,20 @@
 import binascii
 import json
 import os
-from parser import ParserError
 
 import solcx
 import websockets
 from solcx.exceptions import SolcError
 from web3 import Web3
 
-from solcx import compile_standard, install_solc
+from solcx import compile_standard
 
-class ConnectionHost():
+
+class ConnectionHost:
     def __init__(self):
         self.chain_link = "ws://localhost:10002"
         self.chain_id = 1337
+
     def connect(self):
         try:
             web3 = Web3(Web3.WebsocketProvider(self.chain_link))
@@ -24,10 +25,12 @@ class ConnectionHost():
         except websockets.exceptions.InvalidURI as e2:
             print("ERROR - invalid URI:")
             print(e2)
+
+
 class Deployer():
     # temp
-    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
-    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
+    my_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
+    private_key = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
 
     # temp
     @staticmethod
@@ -53,7 +56,7 @@ class Deployer():
 
             # Crea il file.json di ogni contratto deployato contenente l'abi di esso
             for contract in compiled_sol["contracts"][contract_name]:
-                with open("app/compiled_contracts/" + contract + ".json", "w") as file:
+                with open("contracts/compiled/" + contract + ".json", "w") as file:
                     json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
             with open("compiled_code.json", "w") as file:
@@ -88,7 +91,7 @@ class Deployer():
 
     def deploy(self, bytecode, abi):
         try:
-            w3 = ConnectionHost().connect() # TODO: move all connection-related code outside of this class
+            w3 = ConnectionHost().connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
@@ -131,8 +134,8 @@ class Deployer():
 
 class Caller():
     # temp
-    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
-    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
+    my_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
+    private_key = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
 
     # temp
 
@@ -145,9 +148,9 @@ class Caller():
         i = 0
         j = 0
         for elem in param:
-            i = i+1
+            i = i + 1
             if elem is None:
-                j = j+1
+                j = j + 1
         if i != j:
             transaction = func(*param).buildTransaction(
                 {
@@ -175,5 +178,5 @@ class Caller():
         print("Calling the contract... ")  # <-(tqdm)
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
         print("Function executed\n")
-        #print(tx_receipt)
+        # print(tx_receipt)
         # TODO: exception handling di ogni genere

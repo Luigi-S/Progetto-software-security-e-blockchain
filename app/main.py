@@ -1,14 +1,10 @@
-import binascii
 import json
 import re
 from pathlib import Path
 
-import solcx
 import typer
-from web3 import Web3
 
 from Log import Logger
-from solcx.exceptions import SolcError
 
 from compiler import Deployer, Caller
 
