@@ -3,6 +3,7 @@ import json
 import os
 
 import solcx
+import web3
 import websockets
 from solcx.exceptions import SolcError
 from web3 import Web3
@@ -12,7 +13,7 @@ from solcx import compile_standard
 
 class ConnectionHost:
     def __init__(self):
-        self.chain_link = "ws://localhost:10002"
+        self.chain_link = "ws://127.0.0.1:8545"
         self.chain_id = 1337
 
     def connect(self):
@@ -29,8 +30,8 @@ class ConnectionHost:
 
 class Deployer():
     # temp
-    my_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
-    private_key = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
 
     # temp
     @staticmethod
@@ -54,9 +55,12 @@ class Deployer():
                 },
             )
 
+            if not os.path.exists("app/compiled_contracts"):
+                os.makedirs("app/compiled_contracts")
+
             # Crea il file.json di ogni contratto deployato contenente l'abi di esso
             for contract in compiled_sol["contracts"][contract_name]:
-                with open("contracts/compiled/" + contract + ".json", "w") as file:
+                with open("app/compiled_contracts/" + contract + ".json", "w") as file:
                     json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
             with open("compiled_code.json", "w") as file:
@@ -88,6 +92,7 @@ class Deployer():
             print(e3)
         except Exception as e4:
             print("ERROR: system error occurred.")
+            print(e4)
 
     def deploy(self, bytecode, abi):
         try:
@@ -134,8 +139,8 @@ class Deployer():
 
 class Caller():
     # temp
-    my_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
-    private_key = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
 
     # temp
 
@@ -143,40 +148,51 @@ class Caller():
         self.w3 = ConnectionHost().connect()
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
 
+    # func_name è il nome della funzione dello smart contract da chiamare, *param sono
+    # i parametri (in numero variabile) da passare a tale funzione
     def call(self, func_name, *param):
-        func = self.contract.get_function_by_name(func_name)
-        i = 0
-        j = 0
-        for elem in param:
-            i = i + 1
-            if elem is None:
-                j = j + 1
-        if i != j:
-            transaction = func(*param).buildTransaction(
-                {
-                    "chainId": self.w3.eth.chain_id,
-                    "gasPrice": self.w3.eth.gas_price,
-                    "from": self.my_address,
-                    "nonce": self.w3.eth.getTransactionCount(self.my_address),
-                }
+        try:
+            func = self.contract.get_function_by_name(func_name)
+            i = 0
+            j = 0
+            for elem in param:
+                i = i + 1
+                if elem is None:
+                    j = j + 1
+            if i != j:
+                transaction = func(*param).buildTransaction(
+                    {
+                        "chainId": self.w3.eth.chain_id,
+                        "gasPrice": self.w3.eth.gas_price,
+                        "from": self.my_address,
+                        "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                    }
+                )
+                value_returned = func(*param).call()
+            else:
+                transaction = func().buildTransaction(
+                    {
+                        "chainId": self.w3.eth.chain_id,
+                        "gasPrice": self.w3.eth.gas_price,
+                        "from": self.my_address,
+                        "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                    }
+                )
+                value_returned = func().call()
+            signed_transaction = self.w3.eth.account.sign_transaction(
+                transaction_dict=transaction, private_key=self.private_key
             )
-            value_returned = func(*param).call()
-        else:
-            transaction = func().buildTransaction(
-                {
-                    "chainId": self.w3.eth.chain_id,
-                    "gasPrice": self.w3.eth.gas_price,
-                    "from": self.my_address,
-                    "nonce": self.w3.eth.getTransactionCount(self.my_address),
-                }
-            )
-            value_returned = func().call()
-        signed_transaction = self.w3.eth.account.sign_transaction(
-            transaction_dict=transaction, private_key=self.private_key
-        )
-        tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-        print("Calling the contract... ")  # <-(tqdm)
-        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
-        print("Function executed\n")
-        # print(tx_receipt)
-        # TODO: exception handling di ogni genere
+            tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            print("Calling the contract... ")  # <-(tqdm)
+            tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
+            print("Function executed\n")
+            # print(tx_receipt)
+        except web3.exceptions.InvalidAddress:
+            print("The address doesn't exist.")
+        except ValueError:
+            print("The method called doesn't exist.\n")
+            print("Tip: check if the abi used is the correct one.")
+        except TypeError:
+            print("The params inserted aren't the same required by the function called.")
+        except Exception:
+            print("System error occurred.")

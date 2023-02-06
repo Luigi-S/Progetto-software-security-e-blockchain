@@ -178,10 +178,11 @@ def prova():
         file = f.read().__str__()
         file.replace("\"", "\\\"")
 
-    #try:
-    call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709", abi=file, func="retrieve", param=(None))
-    #except Exception as e:
-    #    print(e)
+    try:
+        call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709", abi=file, func="store", param=(5))
+    except Exception as e:
+        print(e.__class__)
+        raise SystemExit(1)
 
 
 @app.command()
