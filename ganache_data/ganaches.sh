@@ -21,7 +21,7 @@ fi
 for (( i = 0 ; i < $ports ; i += 1 )) ; do
 	#add ganache parameters
 	#add logging
-	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "/ganache_data/db_$i" -d -a 5 -e 1000 ) &
+	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "/ganache_data/db_$i" -d -a 1 -e 10000 --wallet.accountKeysPath "/ganache_data/db_$i/keys.json") &
 done
 
 wait

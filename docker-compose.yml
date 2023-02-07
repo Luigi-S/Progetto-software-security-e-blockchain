@@ -1,15 +1,16 @@
 services:
-  app:
-    build: ./app
-    ports:
-      - "10010:10010"
-    volumes:
-      - ./app/:/app/
+  #app:
+   # build: ./app
+   # ports:
+    #  - "10010:10010"
+    #volumes:
+     # - ./app/:/app/
   ganache:
+    build: ./ganache_data
     image: multi_ganache
     container_name: blockchain
-    build:
-      dockerfile: /ganache_data/Dockerfile
+    #build:
+      #dockerfile: /ganache_data/Dockerfile
     volumes:
       - ./ganache_data:/ganache_data
     environment:
