@@ -5,6 +5,7 @@ pragma solidity >=0.6.0 <0.9.0;
 contract Contratto {
 
     uint256 matricola;
+    event XXX(uint256 pippo);
 
     struct Studente {
         uint256 matricola;
@@ -16,6 +17,7 @@ contract Contratto {
 
     function store(uint256 _numero) public {
         matricola = _numero;
+        emit XXX(matricola);
     }
 
     function retrieve() public view returns (uint256){

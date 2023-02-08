@@ -1,15 +1,16 @@
 import binascii
 import json
 import os
-from web3 import Web3
 from solcx import compile_standard
 import solcx
+
+from connection_host import ConnectionHost
 
 class Deployer():
 
     def __init__(self, chain_link, d_address, d_pk):
         self.solc_version = os.environ.get("SOLC_VERSION")
-        self.w3 = Web3(Web3.WebsocketProvider(chain_link))
+        self.w3 = ConnectionHost(chain_link).connect()
         self.chain_id = self.w3.eth.chain_id
         self.d_address = d_address
         self.d_pk = d_pk

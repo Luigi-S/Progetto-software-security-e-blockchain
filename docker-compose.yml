@@ -1,21 +1,36 @@
 services:
-  #app:
-   # build: ./app
-   # ports:
-    #  - "10010:10010"
-    #volumes:
-     # - ./app/:/app/
-  ganache:
-    build: ./ganache_data
-    image: multi_ganache
-    container_name: blockchain
-    #build:
-      #dockerfile: /ganache_data/Dockerfile
+  
+  py_backend:
+    build: ./py_backend
+    image: py_backend:1.0
+    container_name: py_backend
     volumes:
-      - ./ganache_data:/ganache_data
+      - ./py_backend/:/py_backend/
+    depends_on:
+      - ganaches
+    networks:
+      - my-network
     environment:
-      - BASE_PORT=10000
-      - TOP_PORT=10003
+      - PORTS=4
+      - URL=ws://ganaches:10000
+      - POLL_INTERVAL=0.5
+      - SOLC_VERSION=0.8.18
+      - ADMIN_ADDRESS=0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1
+      - ADMIN_PK=0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
+  
+  ganaches:
+    build: ./ganache
+    image: ganaches:1.0
+    container_name: ganaches
+    volumes:
+      - ./ganache:/ganache
+    environment:
+      - PORTS=4
     ports:
       - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
-#command: --db=/ganache_data --mnemonic 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
+    networks:
+      - my-network
+  
+networks:
+  my-network:
+    driver: bridge

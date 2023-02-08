@@ -1,11 +1,10 @@
-from web3 import Web3
 import web3
 import asyncio
 import os
-from dotenv import load_dotenv
 import json
 
 from caller import Caller
+from connection_host import ConnectionHost
 
 class Checker():
     
@@ -17,8 +16,8 @@ class Checker():
         self.deploys = {}
 
         for port in range(base_port, top_port):
-            url = "ws://127.0.0.1:" + str(port)
-            self.w3Shard[url] = Web3(Web3.WebsocketProvider(url))
+            url = "ws://ganaches:" + str(port)
+            self.w3Shard[url] = ConnectionHost(url).connect()
             self.filters[url] = self.w3Shard[url].eth.filter({"fromBlock" : "latest"})
             self.deploys[url] = []
 
@@ -108,18 +107,14 @@ class Checker():
                 self.caller.call("deleteChecked", deployId, result)
 
 
-def main():
-    load_dotenv()
+def init(ORACLE_ADDRESS):
     URL = os.environ.get("URL")
     ADMIN_ADDRESS = os.environ.get("ADMIN_ADDRESS")
     ADMIN_PK = os.environ.get("ADMIN_PK")
-    ORACLE_ADDRESS = os.environ.get("ORACLE_ADDRESS")
-    
+    PORTS = int(os.environ.get("PORTS"))
+
     with open("abi/Oracle.json", "r") as file:
         oracle_abi = json.load(file)
         oracle_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, ORACLE_ADDRESS, oracle_abi)
-        checker = Checker(oracle_caller, 10000, 10004)
+        checker = Checker(oracle_caller, 10000, 10000 + PORTS)
         checker.start()
-
-if __name__ == "__main__":
-    main()
