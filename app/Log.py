@@ -1,12 +1,16 @@
-from io import StringIO
+import re
 
-from dotenv import load_dotenv, dotenv_values
+from dotenv import dotenv_values
 from eth_account import Account
+from ast import literal_eval
 
 
 class Logger:
     def __init__(self, address):
-        self._address = address
+        if re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is not None:
+            self._address = address
+        else:
+            raise Exception("Invalid address")
         self._map = dotenv_values(".env")
 
     def getAddress(self):
@@ -14,15 +18,16 @@ class Logger:
 
     def getKey(self, passwd):
         try:
-            return Account.decrypt(self._map[self._address], password=passwd)
+            x = literal_eval(self._map[self._address])
+            return Account.decrypt(x, password=passwd).hex()
         except KeyError as e:
             raise Exception("Address not registered on this device")
 
     def register(self, key, passwd):
         try:
             encrypted = Account.encrypt(key, passwd)
-            config = StringIO(f"{self._address}={encrypted}")
-            load_dotenv(stream=config)
-        except Exception:
+            with open(".env", "a") as f:
+                f.write(f"{self._address}={encrypted}\n") #['cyphertext']
+        except Exception as e:
             # distinguere eccezioni?
-            raise Exception("Registation failed")
+            raise Exception("Registation failed", e.args)

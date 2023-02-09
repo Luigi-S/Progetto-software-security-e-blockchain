@@ -134,6 +134,31 @@ class Deployer():
         except Exception as e4:
             print("ERROR: system error occurred.")
             print(e4)
+        w3 = Web3(Web3.WebsocketProvider(self.chain_link)) # TODO: move all connection-related code outside of this class
+        # Create the contract in Python
+        contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+        # Get the latest transaction
+        nonce = w3.eth.getTransactionCount(self.my_address)  # get address from dotenv
+        # Submit the transaction that deploys the contract
+        transaction = contract.constructor().buildTransaction(
+            {
+                "chainId": self.chain_id,
+                "gasPrice": w3.eth.gas_price,
+                "from": self.my_address,
+                "nonce": nonce,
+            }
+        )
+        # Sign the transaction
+        signed_txn = w3.eth.account.sign_transaction(transaction, private_key=self.private_key) # get private key from dotenv
+        print("Deploying Contract...")
+        print("[=", end='') #TODO: change to tqdm or similar
+        # Send it!
+        transaction_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        print("==", end='')
+        # Wait for the transaction to be mined, and get the transaction receipt
+        receipt = w3.eth.wait_for_transaction_receipt(transaction_hash)
+        print("=]")
+        print(f"Contract deployed to address: {receipt.contractAddress}") # TODO: optionally, move all user communication to cli
 
 
 class Caller():

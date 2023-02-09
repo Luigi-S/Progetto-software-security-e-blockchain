@@ -4,13 +4,17 @@ import re
 from pathlib import Path
 
 import typer
+from click import Abort
 from web3 import Web3
 
 import onchain
 
 from Log import Logger
+from call import Caller2
 
 from compiler import Deployer, Caller
+
+from cliutils import show_methods, select_method, insert_args
 
 title = """
      _______         _______  
@@ -44,38 +48,31 @@ def register():
         while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is None:
             typer.echo("Error: Address is not valid")
             address = typer.prompt(text="Address ")
-        password = typer.Option(default=None, prompt=True, confirmation_prompt=True, hide_input=True)
+        password = typer.prompt(confirmation_prompt=True, hide_input=True, text="Password ")
         if re.match(pattern="",
                     string=password) is None:  # "^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
             # in fase di sviluppo libertà sulla scelta della password, la regex è pronta per:
             # almeno una lettera, un numero, un carattere speciale:@$!%*#?&, almeno 8 caratteri
             typer.echo("Error: Weak password \n"
                        " Minimum eight characters, at least one letter, one number and one special character")
-            password = typer.Option(default=None, prompt=True, confirmation_prompt=True, hide_input=True)
-        private_key: str = typer.Option(default=None, prompt=True, confirmation_prompt=True, hide_input=True)
+            password = typer.prompt(confirmation_prompt=True, hide_input=True, text="Password ")
+        private_key = typer.prompt(confirmation_prompt=True, hide_input=True, text="Private Key ")
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
             typer.echo("Error: Private key is not valid")
-            private_key: str = typer.Option(default=None, prompt=True, confirmation_prompt=True, hide_input=True)
+            private_key = typer.prompt(confirmation_prompt=True, hide_input=True, text="Private Key ")
         logger = Logger(address)
         logger.register(private_key, password)
+    except Abort:
+        typer.echo("Closing...")
+        # TODO valutare su quali azioni fare rollback
+        typer.echo("Hello")
     except Exception as e:
         typer.echo("Something went wrong")  # TODO distinguere le casistiche
+        typer.echo(e.args)
+        # typer.echo(e.with_traceback()) # - developement
         exit(1)
 
 
-def sign():
-    # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
-    k = None
-    try:
-        typer.echo("Insert credentials for ETH account")
-        logger = Logger(typer.prompt("Address "))
-        k = logger.getKey(passwd=typer.prompt(hide_input=True, text=f"Password for {logger.getAddress()}"))
-    except Exception:
-        # TODO handling
-        typer.echo("Login failed")
-    return k
-
-# DA ELIMINARE
 @app.command()
 def initial_deploy():
     initialize()
@@ -178,6 +175,7 @@ def call(address: str, abi, func: str, param):
     # Si puo pensare di semplificare quest'interazione aprendo un menu con i vari metodi e facendo scegliere il
     # metodo in un secondo momento
 
+
 @app.command()
 def prova():
     file = ""
@@ -200,6 +198,39 @@ def prova_deploy():
 def help():
     initialize()
     # TODO: scrivere la guida ?
+
+
+####CALL
+@app.command()
+def ciao(contract_address="0x5b1869D9A4C187F2EAa108f3062412ecf0526b24", abi_path="contracts\\compiled\\Contratto.json"):
+    # w3 lo si ottiene da metodi della connessione ConnectionHost(chain_link) .get_web3()
+    # bisogna farsi passare address e abi del contratto -> Option
+    # reading the data from the file
+    try:
+        with open(abi_path) as f:
+            data = f.read()
+        abi = json.loads(data)
+    except IOError:
+        typer.echo("Could not access ABI file")
+        typer.echo("Exiting...")
+        exit(1)
+    except json.decoder.JSONDecodeError:
+        typer.echo("File is not a JSON")
+        typer.echo("Exiting...")
+        exit(1)
+
+    try:
+        caller = Caller2(contract_address, abi)
+        show_methods(abi=caller.get_abi())
+        go_on = True
+        while go_on:
+            typer.echo(caller.method_call(select_method(abi)))
+            typer.echo()
+            go_on = typer.confirm("Do you want to keep working with this contract?")
+    except Exception as e:
+        typer.echo(e.args[0])
+        typer.echo("Exiting...")
+        exit(1)
 
 
 if __name__ == "__main__":
