@@ -19,9 +19,8 @@ if (( $ports < 2 )) || (( $ports > 10 )); then
 fi
 
 for (( i = 0 ; i < $ports ; i += 1 )) ; do
-	#add ganache parameters
-	#add logging
-	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "/ganache_data/db_$i" -d -a 5 -e 1000 ) &
+	mkdir "db_$i"
+	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "db_$i" -d -a 1 -e 10000 --wallet.accountKeysPath "db_$i/keys.json") &
 done
 
 wait

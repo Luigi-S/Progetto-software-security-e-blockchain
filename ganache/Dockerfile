@@ -1,7 +1,6 @@
 FROM trufflesuite/ganache:latest
-COPY . /ganache_data
-WORKDIR /ganache_data
-
+COPY . /ganache
+WORKDIR /ganache
 ENV PORTS=4
-#ENV BASE_PORT=10000
+RUN chmod 755 ganaches.sh
 ENTRYPOINT ./ganaches.sh
