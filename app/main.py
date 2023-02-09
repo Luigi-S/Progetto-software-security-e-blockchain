@@ -1,8 +1,12 @@
 import json
+import os
 import re
 from pathlib import Path
 
 import typer
+from web3 import Web3
+
+import onchain
 
 from Log import Logger
 
@@ -71,7 +75,7 @@ def sign():
         typer.echo("Login failed")
     return k
 
-
+# DA ELIMINARE
 @app.command()
 def initial_deploy():
     initialize()
@@ -86,6 +90,28 @@ def initial_deploy():
             d = Deployer()
             d.deploy(bytecode=bytecode["Manager"], abi=abi["Manager"])
             d.deploy(bytecode=bytecode["Oracle"], abi=abi["Oracle"])
+
+            file = ""
+            with open("app/compiled_contracts/Manager.json", "r") as f:
+                file = f.read().__str__()
+                file.replace("\"", "\\\"")
+
+            file2 = ""
+            with open("app/compiled_contracts/Oracle.json", "r") as f:
+                file2 = f.read().__str__()
+                file2.replace("\"", "\\\"")
+
+            call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709",
+                 abi=file, func="addShard", param=("ws://127.0.0.1:8545", True))
+
+            #oracle_address = bytes.fromhex("3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26")
+            oracle_address = tuple(["0x3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26"])
+            call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709",
+                 abi=file, func="setOracle", param=oracle_address)
+
+            manager_address = tuple(["0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709"])
+            call(address="0x3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26",
+                 abi=file2, func="setManager", param=manager_address)
         except Exception as e:
             print(e)
             raise SystemExit(1)
@@ -160,10 +186,14 @@ def prova():
         file.replace("\"", "\\\"")
 
     try:
-        call(address="0x50e7D57bB32fE6B98783591d113722988A7AD5c8", abi=file, func="retrieve", param=(None))
+        call(address="0x001De561C23cd1caFcBA2F8BE97D3C350f2EEb45", abi=file, func="addStudente", param=("Gig", 69))
     except Exception as e:
         print(e.__class__)
         raise SystemExit(1)
+
+@app.command()
+def prova_deploy():
+    onchain.deploy()
 
 
 @app.command()

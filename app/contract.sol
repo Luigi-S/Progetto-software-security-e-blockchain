@@ -27,5 +27,6 @@ contract Contratto {
     function addStudente(string memory _nome, uint256 _matricola) public {
         lista_studenti.push(Studente(_matricola, _nome));
         nome_matricola[_nome] = _matricola;
+        emit XXX(matricola);
     }
 }

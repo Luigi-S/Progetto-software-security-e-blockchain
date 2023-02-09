@@ -12,8 +12,8 @@ from solcx import compile_standard
 
 
 class ConnectionHost:
-    def __init__(self):
-        self.chain_link = "ws://127.0.0.1:8545"
+    def __init__(self, chain_link):
+        self.chain_link = chain_link
         self.chain_id = 1337
 
     def connect(self):
@@ -91,9 +91,9 @@ class Deployer():
             print("ERROR: system error occurred.")
             print(e4)
 
-    def deploy(self, bytecode, abi):
+    def deploy(self, bytecode, abi, url_shard="ws://127.0.0.1:8545"):
         try:
-            w3 = ConnectionHost().connect()
+            w3 = ConnectionHost(url_shard).connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
@@ -118,8 +118,10 @@ class Deployer():
             # Wait for the transaction to be mined, and get the transaction receipt
             receipt = w3.eth.wait_for_transaction_receipt(transaction_hash)
             print("=]")
-            print(
-                f"Contract deployed to address: {receipt.contractAddress}")  # TODO: optionally, move all user communication to cli
+            print(f"Contract deployed to address: {receipt.contractAddress}")
+
+            return receipt.contractAddress
+
         except binascii.Error as e:
             print("ERROR: the file doesn't contains a valid bytecode or abi.")
         except KeyError as e2:
@@ -141,15 +143,19 @@ class Caller():
 
     # temp
 
-    def __init__(self, contract_address, abi):
-        self.w3 = ConnectionHost().connect()
+    def __init__(self, contract_address, abi, chain_link="ws://127.0.0.1:8545"):
+        self.w3 = ConnectionHost(chain_link).connect()
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
+
+    def get_func(self, func_name):
+        return self.contract.get_function_by_name(func_name)
 
     # func_name è il nome della funzione dello smart contract da chiamare, *param sono
     # i parametri (in numero variabile) da passare a tale funzione
     def call(self, func_name, *param):
         try:
-            func = self.contract.get_function_by_name(func_name)
+            #func = self.contract.get_function_by_name(func_name)
+            func = self.get_func(func_name)
             i = 0
             j = 0
             for elem in param:
@@ -158,7 +164,7 @@ class Caller():
                     j = j + 1
             if i != j:
                 for obj in self.contract.abi:
-                    if obj["name"] == func_name and obj["stateMutability"] != "view":
+                    if "name" in obj and obj["name"] == func_name and obj["stateMutability"] != "view":
                         transaction = func(*param).buildTransaction(
                             {
                                 "chainId": self.w3.eth.chain_id,
@@ -174,10 +180,10 @@ class Caller():
                         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
                         # catcha gli eventi
                         #event = self.contract.events.XXX().processReceipt(tx_receipt)
-                value_returned = func(*param).call()
+                #value_returned = func(*param).call()
             else:
                 for obj in self.contract.abi:
-                    if obj["name"] == func_name and obj["stateMutability"] != "view":
+                    if "name" in obj and obj["name"] == func_name and obj["stateMutability"] != "view":
                         transaction = func().buildTransaction(
                             {
                                 "chainId": self.w3.eth.chain_id,
@@ -193,16 +199,19 @@ class Caller():
                         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
                         # catcha gli eventi
                         #event = self.contract.events.XXX().processReceipt(tx_receipt)
-                value_returned = func().call()
+                #value_returned = func().call()
 
             print("Function executed")
+            return func
 
         except web3.exceptions.InvalidAddress:
             print("The address doesn't exist.")
-        except ValueError:
+        except ValueError as e1:
+            print(e1)
             print("The method called doesn't exist.\n")
             print("Tip: check if the abi used is the correct one.")
         except TypeError:
             print("The params inserted aren't the same required by the function called.")
-        except Exception:
+        except Exception as e:
+            print(e)
             print("System error occurred.")
