@@ -202,25 +202,26 @@ def help():
 
 ####CALL
 @app.command()
-def ciao(contract_address="0x5b1869D9A4C187F2EAa108f3062412ecf0526b24", abi_path="contracts\\compiled\\Contratto.json"):
-    # w3 lo si ottiene da metodi della connessione ConnectionHost(chain_link) .get_web3()
-    # bisogna farsi passare address e abi del contratto -> Option
-    # reading the data from the file
+def call2():
+    chain_link = typer.prompt(text="Link to the chain ")
+    contract_address = typer.prompt(text="Contract address ")
+    while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=contract_address) is None:
+        typer.echo("Error: Address is not valid")
+        contract_address = typer.prompt(text="Contract address ")
+    flag = True
+    while flag:
+        abi_path = typer.prompt(text="Path to ABI ")
+        try:
+            with open(abi_path) as f:
+                data = f.read()
+            abi = json.loads(data)
+            flag = False
+        except IOError:
+            typer.echo("Could not access ABI file")
+        except json.decoder.JSONDecodeError:
+            typer.echo("File is not a JSON")
     try:
-        with open(abi_path) as f:
-            data = f.read()
-        abi = json.loads(data)
-    except IOError:
-        typer.echo("Could not access ABI file")
-        typer.echo("Exiting...")
-        exit(1)
-    except json.decoder.JSONDecodeError:
-        typer.echo("File is not a JSON")
-        typer.echo("Exiting...")
-        exit(1)
-
-    try:
-        caller = Caller2(contract_address, abi)
+        caller = Caller2(chain_link, contract_address, abi)
         show_methods(abi=caller.get_abi())
         go_on = True
         while go_on:
