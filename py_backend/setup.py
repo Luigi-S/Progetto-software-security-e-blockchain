@@ -18,15 +18,15 @@ def main():
     except Exception as e:
         print(e)
 
+    deployer = Deployer(URL, ADMIN_ADDRESS, ADMIN_PK)
+
+    manager_bytecode, manager_abi = deployer.compile("contracts/Manager.sol")
+    oracle_bytecode, oracle_abi = deployer.compile("contracts/Oracle.sol")
+    
     if not manager_address or not oracle_address:
-        deployer = Deployer(URL, ADMIN_ADDRESS, ADMIN_PK)
-
-        manager_bytecode, manager_abi = deployer.compile("contracts/Manager.sol")
         manager_address = deployer.deploy(manager_bytecode, manager_abi)
-
-        oracle_bytecode, oracle_abi = deployer.compile("contracts/Oracle.sol")
         oracle_address = deployer.deploy(oracle_bytecode, oracle_abi)
-
+        
         oracle_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, oracle_address, oracle_abi)
         manager_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, manager_address, manager_abi)
 

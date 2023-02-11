@@ -1,0 +1,71 @@
+{
+	"compiler": {
+		"version": "0.8.17+commit.8df45f5f"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"inputs": [],
+				"name": "destroy",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Mortal.sol": "Mortal"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Mortal.sol": {
+			"keccak256": "0x29597d0239fc2440de6898da2c3251f0e2c1ec6ae3d57452cec0c6e2f438e548",
+			"license": "GPL-3.0",
+			"urls": [
+				"bzz-raw://6540330f8180f2252b32ff6694de8bbfa5a508a89a3a2cb787217ddd4193e231",
+				"dweb:/ipfs/QmQcMcGZZqHQoZ9ZtFuYxGMSA9Sstj6Wrx9qMvk4L7YePv"
+			]
+		}
+	},
+	"version": 1
+}

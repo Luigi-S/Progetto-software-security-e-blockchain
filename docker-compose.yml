@@ -8,8 +8,6 @@ services:
       - ./py_backend/:/py_backend/
     depends_on:
       - ganaches
-    networks:
-      - my-network
     environment:
       - PORTS=4
       - URL=ws://ganaches:10000
@@ -28,9 +26,3 @@ services:
       - PORTS=4
     ports:
       - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
-    networks:
-      - my-network
-  
-networks:
-  my-network:
-    driver: bridge
