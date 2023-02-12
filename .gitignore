@@ -3,7 +3,7 @@
 __pycache__
 *.pyc
 /ganache/db_*
-*/artifacts
+artifacts
 */.deps
 */swarm
 /py_backend/.env

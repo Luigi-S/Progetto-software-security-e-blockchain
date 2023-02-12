@@ -55,7 +55,7 @@ class Checker():
                         #    address, status, to
                         #))
                         
-                        if address and status and not to:
+                        if address and status and not to and w3.eth.get_code(address):
                             print("Deploy found in transaction log:\n    user={}\n    shard={}\n    address={}".format(
                                 user, shardUrl, address
                             ))
