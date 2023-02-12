@@ -123,7 +123,7 @@ def compile_deploy(bytecode: str, abi):
 def deploy(path: str):
     _deploy(path=path, abi=[])
 
-
+# DA SPOSTARE IN onchain.py
 def _deploy(path: str, abi):
     initialize()
     target = Path(path)
@@ -162,12 +162,12 @@ def _deploy(path: str, abi):
         print("Non valid input: impossible to find a deployable contract.")
         raise SystemExit(1)
 
-
+# DA ELIMINARE
 @app.command()
 def call(address: str, abi, func: str, param):
     initialize()
     # TODO: controllare che l'address sia valido, se possibile
-    caller = Caller(address, abi)
+    caller = Caller(address, abi, "ws://127.0.0.1:8545")
     try:
         caller.call(func, *param)
     except TypeError as e:
@@ -176,6 +176,7 @@ def call(address: str, abi, func: str, param):
     # metodo in un secondo momento
 
 
+# DA ELIMINARE
 @app.command()
 def prova():
     file = ""
@@ -189,9 +190,18 @@ def prova():
         print(e.__class__)
         raise SystemExit(1)
 
+# DA ELIMINARE
 @app.command()
 def prova_deploy():
-    onchain.deploy()
+    o = onchain.OnChain()
+    o.deploySC("app/contract.sol")
+    #o.setShardingAlgorithm(0)
+    #o.setShardStatus(10, True)
+    with open("app/compiled_contracts/Contratto.json", "r") as f:
+        file = f.read().__str__()
+        file.replace("\"", "\\\"")
+    #o.deleteSC(abi=file, id_SC=1, address="0x5E0AcA7cDb7f74BCc776A18B64ed4b2c52569788", url_shard="ws://127.0.0.1:8545")
+    #o.call(address="0x2166FF23b1168e13609ebDE5181f0dF63D0b3E29", abi=file, chain_link="ws://127.0.0.1:8545", func="store", param=(777))
 
 
 @app.command()
