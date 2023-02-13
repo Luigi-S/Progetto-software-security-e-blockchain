@@ -10,7 +10,7 @@ class OnChain():
 
     manager_shard = "ws://127.0.0.1:8545"
     manager_abi: str
-    manager_address = "0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709"
+    manager_address = "0x5b1869D9A4C187F2EAa108f3062412ecf0526b24"
     contract: Contract
 
     def __init__(self):
@@ -36,7 +36,7 @@ class OnChain():
                 tx_receipt = caller.call(func, param)
                 return tx_receipt
             except Exception:
-                print("Something goes wrong :(")
+                print("Something went wrong :(")
 
     def deploySC(self, path_file: str, abi=None):
         try:
@@ -127,5 +127,12 @@ class OnChain():
             self.call(address=self.manager_address, abi=self.manager_abi,
                       func="setShardStatus", param=(shard_id, status), chain_link=self.manager_shard)
         except Exception as e:
-            #print(e)
+            # print(e)
             raise SystemExit(1)
+
+    def getDeployMap(self):
+        try:
+            self.call(address=self.manager_address, abi=self.manager_abi,
+                      func="getDeployMap", param=(), chain_link=self.manager_shard)
+        except Exception as e:
+            raise Exception("Could not get contract list...")

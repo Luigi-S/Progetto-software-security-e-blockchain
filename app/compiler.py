@@ -10,6 +10,8 @@ from web3 import Web3
 
 from solcx import compile_standard
 
+from cliutils import sign
+
 
 class ConnectionHost:
     def __init__(self, chain_link):
@@ -30,10 +32,10 @@ class ConnectionHost:
 
 class Deployer():
     # temp
-    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
-    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
-
+    #my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    #private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
     # temp
+
     @staticmethod
     # TODO: handle failed compilation
     def compile(contract_path):
@@ -75,8 +77,6 @@ class Deployer():
 
             return bytecode, abi
 
-            # provvisorio v
-            # return bytecode[list(compiled_sol["contracts"][contract_name].keys())[0]], abi[list(compiled_sol["contracts"][contract_name].keys())[0]]
 
         except solcx.exceptions.SolcError as e:
             print("ERROR: the file .sol isn't syntactically correct.")
@@ -97,27 +97,23 @@ class Deployer():
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
-            nonce = w3.eth.getTransactionCount(self.my_address)  # get address from dotenv
+            address, key = sign()
+            nonce = w3.eth.getTransactionCount(address)  # get address from dotenv
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(
                 {
                     "chainId": w3.eth.chain_id,
                     "gasPrice": w3.eth.gas_price,
-                    "from": self.my_address,
+                    "from": address,
                     "nonce": nonce,
                 }
             )
             # Sign the transaction
-            signed_txn = w3.eth.account.sign_transaction(transaction,
-                                                         private_key=self.private_key)  # get private key from dotenv
+            signed_txn = w3.eth.account.sign_transaction(transaction, private_key=key)
             print("Deploying Contract...")
-            print("[=", end='')  # TODO: change to tqdm or similar
-            # Send it!
             transaction_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            print("==", end='')
             # Wait for the transaction to be mined, and get the transaction receipt
             receipt = w3.eth.wait_for_transaction_receipt(transaction_hash)
-            print("=]")
             print(f"Contract deployed to address: {receipt.contractAddress}")
 
             return receipt.contractAddress
@@ -134,17 +130,21 @@ class Deployer():
         except Exception as e4:
             print("ERROR: system error occurred.")
             print(e4)
+
+
+            #???
+            """
         w3 = Web3(Web3.WebsocketProvider(self.chain_link)) # TODO: move all connection-related code outside of this class
         # Create the contract in Python
         contract = w3.eth.contract(abi=abi, bytecode=bytecode)
         # Get the latest transaction
-        nonce = w3.eth.getTransactionCount(self.my_address)  # get address from dotenv
+        nonce = w3.eth.getTransactionCount(address)  # get address from dotenv
         # Submit the transaction that deploys the contract
         transaction = contract.constructor().buildTransaction(
             {
-                "chainId": self.chain_id,
+                "chainId": w3.eth.chain_id,
                 "gasPrice": w3.eth.gas_price,
-                "from": self.my_address,
+                "from": address,
                 "nonce": nonce,
             }
         )
@@ -159,13 +159,13 @@ class Deployer():
         receipt = w3.eth.wait_for_transaction_receipt(transaction_hash)
         print("=]")
         print(f"Contract deployed to address: {receipt.contractAddress}") # TODO: optionally, move all user communication to cli
+            """
 
 
 class Caller():
     # temp
-    my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
-    private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
-
+    #my_address = "0xa1eF58670368eCCB27EdC6609dea0fEFC5884f09"
+    #private_key = "0x5b3208286264f409e1873e3709d3138acf47f6cc733e74a6b47a040b50472fd8"
     # temp
 
     def __init__(self, contract_address, abi, chain_link):
@@ -183,6 +183,7 @@ class Caller():
     def call(self, func_name, *param):
         try:
             #func = self.contract.get_function_by_name(func_name)
+            #TODO guarda caller2, che fa la get function con la signature, evitando metodi con stesso nome
             func = self.get_func(func_name)
             i = 0
             j = 0
@@ -193,16 +194,17 @@ class Caller():
             if i != j:
                 for obj in self.contract.abi:
                     if "name" in obj and obj["name"] == func_name and obj["stateMutability"] != "view":
+                        address, key = sign()
                         transaction = func(*param).buildTransaction(
                             {
                                 "chainId": self.w3.eth.chain_id,
                                 "gasPrice": self.w3.eth.gas_price,
-                                "from": self.my_address,
-                                "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                                "from": address,
+                                "nonce": self.w3.eth.getTransactionCount(address),
                             }
                         )
                         signed_transaction = self.w3.eth.account.sign_transaction(
-                            transaction_dict=transaction, private_key=self.private_key
+                            transaction_dict=transaction, private_key=key
                         )
                         tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
@@ -212,16 +214,17 @@ class Caller():
             else:
                 for obj in self.contract.abi:
                     if "name" in obj and obj["name"] == func_name and obj["stateMutability"] != "view":
+                        address, key = sign()
                         transaction = func().buildTransaction(
                             {
                                 "chainId": self.w3.eth.chain_id,
                                 "gasPrice": self.w3.eth.gas_price,
-                                "from": self.my_address,
-                                "nonce": self.w3.eth.getTransactionCount(self.my_address),
+                                "from": address,
+                                "nonce": self.w3.eth.getTransactionCount(address),
                             }
                         )
                         signed_transaction = self.w3.eth.account.sign_transaction(
-                            transaction_dict=transaction, private_key=self.private_key
+                            transaction_dict=transaction, private_key=key
                         )
                         tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
@@ -235,8 +238,11 @@ class Caller():
         except web3.exceptions.InvalidAddress:
             print("The address doesn't exist.")
         except ValueError as e1:
-            #print(e1)
-            if(e1.args[0].find("execution reverted") != -1): #se viene catchato un ValueError potrebbe essere perchè il metodo
+            if isinstance(e1.args[0], dict):
+                print(e1.args[0]['message']) # not enough funds
+                print("Exiting...")
+                exit(1)
+            elif(e1.args[0].find("execution reverted") != -1): #se viene catchato un ValueError potrebbe essere perchè il metodo
                                                             # dello SC non esiste o perchè esiste ma lancia una revert
                 print("ERROR: " + e1.args[0][70:]) # Acquisiamo il messaggio lanciato durante la revert
             else:

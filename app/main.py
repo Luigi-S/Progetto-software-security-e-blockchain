@@ -1,20 +1,18 @@
 import json
-import os
 import re
 from pathlib import Path
 
 import typer
 from click import Abort
-from web3 import Web3
 
-import onchain
+from onchain import OnChain
 
 from Log import Logger
 from call import Caller2
 
 from compiler import Deployer, Caller
 
-from cliutils import show_methods, select_method, insert_args
+from cliutils import show_methods, select_method, get_contract
 
 title = """
      _______         _______  
@@ -76,7 +74,7 @@ def register():
 @app.command()
 def initial_deploy():
     initialize()
-    path = "app/contracts/on_chain_manager/onChain.sol"
+    path = "contracts/on_chain_manager/onChain.sol"
     target = Path(path)
     if not target.exists():
         print("Cannot find the on chain manager file.sol")
@@ -193,7 +191,7 @@ def prova():
 # DA ELIMINARE
 @app.command()
 def prova_deploy():
-    o = onchain.OnChain()
+    o = OnChain()
     o.deploySC("app/contract.sol")
     #o.setShardingAlgorithm(0)
     #o.setShardStatus(10, True)
@@ -213,8 +211,14 @@ def help():
 ####CALL
 @app.command()
 def call2():
-    chain_link = typer.prompt(text="Link to the chain ")
-    contract_address = typer.prompt(text="Contract address ")
+    #chain_link = typer.prompt(text="Link to the chain ")
+    #contract_address = typer.prompt(text="Contract address ")
+    try:
+        chain_link, contract_address = get_contract(OnChain().getDeployMap())
+    except Exception as e:
+        typer.echo(e.args[0])
+        typer.echo("Exiting...")
+        exit(1)
     while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=contract_address) is None:
         typer.echo("Error: Address is not valid")
         contract_address = typer.prompt(text="Contract address ")

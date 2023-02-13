@@ -72,3 +72,14 @@ def insert_args(inputs):
             return args
         except TypeError as e:
             raise Exception("Error occurred: malformed input\n" + e.args[0])
+
+def get_contract(deploy_map):
+
+    for i in range(len(deploy_map)):
+        typer.echo(str(i)+") - " + deploy_map[i].name + " - shard : " + str(deploy_map[i].shardId))
+    while True:
+        index = typer.prompt("Insert a valid index for a contract", type=int)
+        try:
+            return deploy_map[index].chainUrl, deploy_map[index].addr
+        except ValueError:
+            typer.echo("Invalid index selected")

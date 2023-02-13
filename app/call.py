@@ -28,7 +28,7 @@ class Caller2:
             args = insert_args(inputs)
             my_address, private_key = sign()
             transaction = func(*args).buildTransaction({
-                "chainId": 1337, # TODO chain id va ottenuto dinamicamente...
+                "chainId": self.w3.eth.chain_id,
                 "gasPrice": self.w3.eth.gas_price,  # stima il costo con una call
                 "from": my_address,
                 "nonce": self.w3.eth.getTransactionCount(my_address),
@@ -42,6 +42,3 @@ class Caller2:
         else:
             args = insert_args(inputs)
             return func.__call__(*args).call()
-        #try:
-        #except ValueError as e:
-        #    raise Exception("Error occurred: function not found\n" + e.args[0])
