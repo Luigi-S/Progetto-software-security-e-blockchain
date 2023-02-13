@@ -14,21 +14,22 @@ contract Oracle is AbstractOracle {
         emit ChangedManager(newAddress);
     }
 
-    function deployChecked(uint256 id, bool result) external onlyOwner managerInitialized{
-        manager.fullfillDeploy(id, result);
+    function deployFound(address user, string calldata shard, string calldata name, bytes20 addr, bool reserved) 
+        external onlyOwner managerInitialized{
+        manager.fullfillDeploy(user, shard, name, addr, reserved);
     }
 
-    function deleteChecked(uint256 id, bool result) external onlyOwner managerInitialized{
-        manager.fullfillDelete(id, result);
+    
+    function deleteFound(string calldata shard, bytes20 addr) 
+        external onlyOwner managerInitialized{
+        manager.fullfillDelete(shard, addr);
     }
+    
 
     //manager
-    function checkDeploy(uint256 id, string calldata shard, bytes20 addr, address user) external override onlyManager{
-        emit CheckDeployRequest(id, shard, addr, user);
-    }
-
-    function checkDelete(uint256 id, string calldata shard, bytes20 addr, address user) external override onlyManager{
-        emit CheckDeleteRequest(id, shard, addr, user);
+    function notifyDeploy(address user, string calldata shard, string calldata name) 
+        external override managerInitialized onlyManager{
+        emit DeployReserved(user, shard, name);
     }
 
     //modifiers
@@ -44,6 +45,5 @@ contract Oracle is AbstractOracle {
 
     //event
     event ChangedManager(address newAddress);
-    event CheckDeployRequest(uint256 id, string shard, bytes20 addr, address user);
-    event CheckDeleteRequest(uint256 id, string shard, bytes20 addr, address user);
+    event DeployReserved(address user, string shard, string name);
 }

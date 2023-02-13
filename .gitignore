@@ -1,5 +1,9 @@
-/venv/
+/env/
 /.idea/
 __pycache__
 *.pyc
 /ganache/db_*
+artifacts
+*/.deps
+*/swarm
+/py_backend/.env

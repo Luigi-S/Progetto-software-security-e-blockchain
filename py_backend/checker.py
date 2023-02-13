@@ -13,100 +13,87 @@ class Checker():
         self.poll_interval = float(os.environ.get("POLL_INTERVAL"))
         self.w3Shard = {}
         self.filters = {}
-        self.deploys = {}
+        self.reserved_deploys = {}
 
         for port in range(base_port, top_port):
             url = "ws://ganaches:" + str(port)
             self.w3Shard[url] = ConnectionHost(url).connect()
-            self.filters[url] = self.w3Shard[url].eth.filter({"fromBlock" : "latest"})
-            self.deploys[url] = []
+            self.filters[url] = self.w3Shard[url].eth.filter('latest')
 
-    async def event_loop(self, deploy_filter, delete_filter):
+    async def event_loop(self, deploy_filter):
         while True:
-            for CheckDeployRequest in deploy_filter.get_new_entries():
-                self.handle_request(CheckDeployRequest, True)
-            
-            for CheckDeleteRequest in delete_filter.get_new_entries():
-                self.handle_request(CheckDeleteRequest)
+            for event in deploy_filter.get_new_entries():
+                user = event.args.user
+                shardUrl = str(event.args.shard)
+                name = str(event.args.name)
+                print("Event 'DeployReserved' received:\n    user={}\n    shard={}\n    name={}".format(
+                            user, shardUrl, name
+                        ))
+                self.reserved_deploys[(user, shardUrl)] = name
+
+            await asyncio.sleep(self.poll_interval)
+
+    async def deploy_loop(self):
+        while True:
+
+            for shardUrl in self.w3Shard.keys():
+                w3 = self.w3Shard[shardUrl]
+                filter = self.filters[shardUrl]
+                
+                for blockHash in filter.get_new_entries():
+                    num_tx = w3.eth.get_block_transaction_count(blockHash.hex())
+                    for tx_index in range(num_tx):
+                        transactionHash = w3.eth.get_transaction_by_block(blockHash.hex(), tx_index).hash
+                        tx = w3.eth.get_transaction(transactionHash)
+                        tx_rcp = w3.eth.get_transaction_receipt(transactionHash)
+                        user = tx["from"]
+                        to = tx["to"]
+                        address = tx_rcp.contractAddress
+                        status = tx_rcp.status
+
+                        #print("Transaction:\n    contractAddress={}\n    status={}\n    to={}".format(
+                        #    address, status, to
+                        #))
+                        
+                        if address and status and not to and w3.eth.get_code(address):
+                            print("Deploy found in transaction log:\n    user={}\n    shard={}\n    address={}".format(
+                                user, shardUrl, address
+                            ))
+
+                            reserved = False
+                            name = ""
+                            
+                            if (user, shardUrl) in self.reserved_deploys.keys():
+                                name = self.reserved_deploys[(user, shardUrl)]
+                                print("OK: deploy with name '{}' was previously reserved".format(name))
+                                reserved = True
+                                del self.reserved_deploys[(user, shardUrl)]
+                            else:
+                                print("Manager bypassed: deploy was not previously reserved")
+
+                            self.caller.call("deployFound", user, shardUrl, name, address, reserved)
+                        
+                        if to and status and not w3.eth.get_code(to):
+                                print("Potential delete found in transaction log:\n    user={}\n    shard={}\n    address={}".format(
+                                user, shardUrl, to
+                                ))
+                                self.caller.call("deleteFound", shardUrl, to)
+
             
             await asyncio.sleep(self.poll_interval)
 
-
     def start(self):
-        print("Checker listening\n")
-        deploy_filter = self.caller.contract.events.CheckDeployRequest.createFilter(fromBlock='latest')
-        delete_filter = self.caller.contract.events.CheckDeleteRequest.createFilter(fromBlock='latest')
+        print("Checker listening...\n")
+        deploy_filter = self.caller.contract.events.DeployReserved.createFilter(fromBlock='latest')
+        #delete_filter = self.caller.contract.events.CheckDeleteRequest.createFilter(fromBlock='latest')
         loop = asyncio.get_event_loop()
         try:
             loop.run_until_complete(
-                asyncio.gather(self.event_loop(deploy_filter, delete_filter))
+                asyncio.gather(self.event_loop(deploy_filter), self.deploy_loop())
                 )
         finally:
             loop.close()
-
-    def handle_request(self, event, isDeploy = False):
-        deployId = int(event.args.id)
-        shardUrl = str(event.args.shard)
-        address = event.args.addr
-        user = event.args.user
-        print("{} event received!\nChecking request:\n    deployId={}\n    shardUrl={}\n    user={}\n    address={}".format(
-            "Deploy" if isDeploy else "Delete", deployId, shardUrl, user, address))
-
-        result = False
-
-        try:
-            for x in self.filters[shardUrl].get_new_entries():
-                tx = self.w3Shard[shardUrl].eth.get_transaction(x.transactionHash)
-                tx_rcp = self.w3Shard[shardUrl].eth.get_transaction_receipt(x.transactionHash)
-                
-                cand_user = tx["from"]
-                to = tx["to"]
-                cand_address = tx_rcp.contractAddress
-                status = tx_rcp.status
-                
-                if cand_address and to is None and status:
-                    cand_address = bytes.fromhex(cand_address.replace("0x",""))
-                    print("Deploy found in transaction log:\n    user={}\n    address={}".format(
-                        cand_user, cand_address
-                    ))
-                    self.deploys[shardUrl].append((cand_user, cand_address))
             
-            if isDeploy:
-                try:
-                    self.deploys[shardUrl].remove((user, address))
-                    tx_exists = True
-                    print("Deploy transaction exists!")
-                except ValueError:
-                    tx_exists = False
-                    print("Deploy transaction does not exist...")
-            else:
-                tx_exists = True
-
-            code_exists = True if self.w3Shard[shardUrl].eth.get_code(address) else False
-            
-            if code_exists:
-                print("Contract code exists!")
-            else:
-                print("Contract code does not exist...")
-            
-            result = not( (tx_exists and code_exists) ^ isDeploy)
-            if result:
-                print("{} confirmed!".format("Deploy" if isDeploy else "Delete"))
-            else:
-                print("{} not confirmed...".format("Deploy" if isDeploy else "Delete"))
-            print("__________________________________\n")
-        except web3.exceptions.InvalidAddress:
-            print("Invalid address")
-        except Exception as e:
-            print(type(e))
-            print(e)
-        finally:
-            if isDeploy:
-                self.caller.call("deployChecked", deployId, result)
-            else:
-                self.caller.call("deleteChecked", deployId, result)
-
-
 def init(ORACLE_ADDRESS):
     URL = os.environ.get("URL")
     ADMIN_ADDRESS = os.environ.get("ADMIN_ADDRESS")

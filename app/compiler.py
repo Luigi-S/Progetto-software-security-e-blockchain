@@ -168,12 +168,15 @@ class Caller():
 
     # temp
 
-    def __init__(self, contract_address, abi, chain_link="ws://127.0.0.1:8545"):
+    def __init__(self, contract_address, abi, chain_link):
         self.w3 = ConnectionHost(chain_link).connect()
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
 
     def get_func(self, func_name):
         return self.contract.get_function_by_name(func_name)
+
+    def get_contract(self):
+        return self.contract
 
     # func_name è il nome della funzione dello smart contract da chiamare, *param sono
     # i parametri (in numero variabile) da passare a tale funzione
@@ -227,14 +230,18 @@ class Caller():
                 #value_returned = func().call()
 
             print("Function executed")
-            return func
+            return tx_receipt
 
         except web3.exceptions.InvalidAddress:
             print("The address doesn't exist.")
         except ValueError as e1:
-            print(e1)
-            print("The method called doesn't exist.\n")
-            print("Tip: check if the abi used is the correct one.")
+            #print(e1)
+            if(e1.args[0].find("execution reverted") != -1): #se viene catchato un ValueError potrebbe essere perchè il metodo
+                                                            # dello SC non esiste o perchè esiste ma lancia una revert
+                print("ERROR: " + e1.args[0][70:]) # Acquisiamo il messaggio lanciato durante la revert
+            else:
+                print("The method called doesn't exist.\n")
+                print("Tip: check if the abi used is the correct one.")
         except TypeError:
             print("The params inserted aren't the same required by the function called.")
         except Exception as e:
