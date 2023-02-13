@@ -1,5 +1,4 @@
 import re
-
 from dotenv import dotenv_values
 from eth_account import Account
 from ast import literal_eval
@@ -11,7 +10,7 @@ class Logger:
             self._address = address
         else:
             raise Exception("Invalid address")
-        self._map = dotenv_values(".env")
+        self._map = dotenv_values(".env", verbose=False)
 
     def getAddress(self):
         return self._address
@@ -20,14 +19,15 @@ class Logger:
         try:
             x = literal_eval(self._map[self._address])
             return Account.decrypt(x, password=passwd).hex()
-        except KeyError as e:
+        except KeyError:
             raise Exception("Address not registered on this device")
 
     def register(self, key, passwd):
         try:
             encrypted = Account.encrypt(key, passwd)
             with open(".env", "a") as f:
-                f.write(f"{self._address}={encrypted}\n") #['cyphertext']
+                f.write(f"{self._address}={encrypted}\n")
+        except IOError:
+            raise Exception("Could not store account")
         except Exception as e:
-            # distinguere eccezioni?
             raise Exception("Registation failed", e.args)

@@ -123,7 +123,7 @@ def compile_deploy(bytecode: str, abi):
 def deploy(path: str):
     _deploy(path=path, abi=[])
 
-
+# DA SPOSTARE IN onchain.py
 def _deploy(path: str, abi):
     initialize()
     target = Path(path)
@@ -162,12 +162,12 @@ def _deploy(path: str, abi):
         print("Non valid input: impossible to find a deployable contract.")
         raise SystemExit(1)
 
-
+# DA ELIMINARE
 @app.command()
 def call(address: str, abi, func: str, param):
     initialize()
     # TODO: controllare che l'address sia valido, se possibile
-    caller = Caller(address, abi)
+    caller = Caller(address, abi, "ws://127.0.0.1:8545")
     try:
         caller.call(func, *param)
     except TypeError as e:
@@ -176,6 +176,7 @@ def call(address: str, abi, func: str, param):
     # metodo in un secondo momento
 
 
+# DA ELIMINARE
 @app.command()
 def prova():
     file = ""
@@ -189,9 +190,18 @@ def prova():
         print(e.__class__)
         raise SystemExit(1)
 
+# DA ELIMINARE
 @app.command()
 def prova_deploy():
-    onchain.deploy()
+    o = onchain.OnChain()
+    o.deploySC("app/contract.sol")
+    #o.setShardingAlgorithm(0)
+    #o.setShardStatus(10, True)
+    with open("app/compiled_contracts/Contratto.json", "r") as f:
+        file = f.read().__str__()
+        file.replace("\"", "\\\"")
+    #o.deleteSC(abi=file, id_SC=1, address="0x5E0AcA7cDb7f74BCc776A18B64ed4b2c52569788", url_shard="ws://127.0.0.1:8545")
+    #o.call(address="0x2166FF23b1168e13609ebDE5181f0dF63D0b3E29", abi=file, chain_link="ws://127.0.0.1:8545", func="store", param=(777))
 
 
 @app.command()
@@ -202,25 +212,26 @@ def help():
 
 ####CALL
 @app.command()
-def ciao(contract_address="0x5b1869D9A4C187F2EAa108f3062412ecf0526b24", abi_path="contracts\\compiled\\Contratto.json"):
-    # w3 lo si ottiene da metodi della connessione ConnectionHost(chain_link) .get_web3()
-    # bisogna farsi passare address e abi del contratto -> Option
-    # reading the data from the file
+def call2():
+    chain_link = typer.prompt(text="Link to the chain ")
+    contract_address = typer.prompt(text="Contract address ")
+    while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=contract_address) is None:
+        typer.echo("Error: Address is not valid")
+        contract_address = typer.prompt(text="Contract address ")
+    flag = True
+    while flag:
+        abi_path = typer.prompt(text="Path to ABI ")
+        try:
+            with open(abi_path) as f:
+                data = f.read()
+            abi = json.loads(data)
+            flag = False
+        except IOError:
+            typer.echo("Could not access ABI file")
+        except json.decoder.JSONDecodeError:
+            typer.echo("File is not a JSON")
     try:
-        with open(abi_path) as f:
-            data = f.read()
-        abi = json.loads(data)
-    except IOError:
-        typer.echo("Could not access ABI file")
-        typer.echo("Exiting...")
-        exit(1)
-    except json.decoder.JSONDecodeError:
-        typer.echo("File is not a JSON")
-        typer.echo("Exiting...")
-        exit(1)
-
-    try:
-        caller = Caller2(contract_address, abi)
+        caller = Caller2(chain_link, contract_address, abi)
         show_methods(abi=caller.get_abi())
         go_on = True
         while go_on:
