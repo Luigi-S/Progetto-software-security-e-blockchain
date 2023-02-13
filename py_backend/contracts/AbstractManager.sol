@@ -6,7 +6,8 @@ import "contracts/AbstractOracle.sol";
 abstract contract AbstractManager is Ownable {
 
     struct Contract {
-        uint8 shardId; 
+        uint8 shardId;
+        string shardUrl; 
         bytes20 addr; //address del contratto
         string name; //nome del contratto
         address user; //address dell'utente
@@ -112,7 +113,7 @@ abstract contract AbstractManager is Ownable {
     function fullfillDeploy(address user, string calldata shardUrl, string calldata name, bytes20 addr, bool reserved) 
         external oracleInitialized onlyOracle {
         uint8 shardId = getIdFromUrl(shardUrl);
-        deployMap.push(Contract(shardId, addr, name, user, block.timestamp, reserved));
+        deployMap.push(Contract(shardId, shardUrl, addr, name, user, block.timestamp, reserved));
         shardList[shardId].numDeploy++;
         emit DeploySaved(deployMap.length-1);
     }
