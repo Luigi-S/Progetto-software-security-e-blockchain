@@ -16,7 +16,6 @@ from cliutils import sign
 class ConnectionHost:
     def __init__(self, chain_link):
         self.chain_link = chain_link
-        self.chain_id = 1337
 
     def connect(self):
         try:
@@ -91,14 +90,14 @@ class Deployer():
             print("ERROR: system error occurred.")
             print(e4)
 
-    def deploy(self, bytecode, abi, url_shard="ws://127.0.0.1:8545"):
+    def deploy(self, bytecode, abi, url_shard="ws://127.0.0.1:10000"):
         try:
             w3 = ConnectionHost(url_shard).connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
             address, key = sign()
-            nonce = w3.eth.getTransactionCount(address)  # get address from dotenv
+            nonce = w3.eth.getTransactionCount(address)
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(
                 {
@@ -185,6 +184,7 @@ class Caller():
             #func = self.contract.get_function_by_name(func_name)
             #TODO guarda caller2, che fa la get function con la signature, evitando metodi con stesso nome
             func = self.get_func(func_name)
+            tx_receipt = None
             i = 0
             j = 0
             for elem in param:
