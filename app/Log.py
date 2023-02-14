@@ -25,8 +25,16 @@ class Logger:
     def register(self, key, passwd):
         try:
             encrypted = Account.encrypt(key, passwd)
-            with open(".env", "a") as f:
-                f.write(f"{self._address}={encrypted}\n")
+            if self._address in self._map.keys():
+                self._map[self._address] = encrypted
+                txt = ""
+                for k in self._map.keys():
+                    txt += f"{k}={self._map[k]}\n"
+                with open(".env", "w") as f:
+                    f.write(txt)
+            else:
+                with open(".env", "a") as f:
+                    f.write(f"{self._address}={encrypted}\n")
         except IOError:
             raise Exception("Could not store account")
         except Exception as e:
