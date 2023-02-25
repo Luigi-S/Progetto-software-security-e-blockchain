@@ -55,7 +55,7 @@ class OnChain():
             elif not target.is_dir():
                 if target.suffix == ".sol":
                     func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
-                    url = func(nome_sc).call()
+                    url = func(nome_sc).call().replace("ganaches", "127.0.0.1")
                     self.call(address=self.manager_address, abi=self.manager_abi,
                               func="reserveDeploy", param=([nome_sc]), chain_link=self.manager_shard)
                     print("The contract is ready to be deployed to the shard at the url: " + str(url))

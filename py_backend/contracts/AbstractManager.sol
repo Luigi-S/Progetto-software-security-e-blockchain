@@ -11,7 +11,7 @@ abstract contract AbstractManager is Ownable {
         bytes20 addr; //address del contratto
         string name; //nome del contratto
         address user; //address dell'utente
-        uint256 deployTime; //timestamp deploy
+        uint32 deployTime; //timestamp deploy
         bool reserved;
     }
 
@@ -110,12 +110,13 @@ abstract contract AbstractManager is Ownable {
     }
 
     //va chiamata solo dopo il deploy e la verifica dell'oracolo
-    function fullfillDeploy(address user, string calldata shardUrl, string calldata name, bytes20 addr, bool reserved) 
+    function fullfillDeploy(address user, string calldata shardUrl, string calldata name, bytes20 addr, bool reserved, uint32 timestamp) 
         external oracleInitialized onlyOracle {
         uint8 shardId = getIdFromUrl(shardUrl);
-        deployMap.push(Contract(shardId, shardUrl, addr, name, user, block.timestamp, reserved));
+        Contract memory c = Contract(shardId, shardUrl, addr, name, user, timestamp, reserved);
+        deployMap.push(c);
         shardList[shardId].numDeploy++;
-        emit DeploySaved(deployMap.length-1);
+        emit DeploySaved(deployMap.length-1, c);
     }
  
     //va chiamata solo dopo l'eliminazione e la verifica dell'oracolo
@@ -123,16 +124,18 @@ abstract contract AbstractManager is Ownable {
         external oracleInitialized onlyOracle {
         uint8 shardId = getIdFromUrl(shardUrl);
         uint8 i;
+        Contract memory c;
         for(i=0; i < deployMap.length; i++){
             if(deployMap[i].shardId == shardId &&
                deployMap[i].addr == addr){
-                delete deployMap[i];
-                shardList[shardId].numDeploy--;
+                c = deployMap[i];
                 break;
             }
         }
         if(i < deployMap.length){
-            emit DeployDeleted(i);
+            shardList[shardId].numDeploy--;
+            emit DeployDeleted(i, c);
+            delete deployMap[i];
         }
     }
 
@@ -172,8 +175,8 @@ abstract contract AbstractManager is Ownable {
     }
 
     //events
-    event DeploySaved(uint256 id);
-    event DeployDeleted(uint256 id);
+    event DeploySaved(uint256 id, Contract c);
+    event DeployDeleted(uint256 id, Contract c);
     event ShardAdded(uint8 shardId, string shard);
     event ChangedOracle(address newAddress);
     event ChangedAlgorithm(uint8 newAlg);

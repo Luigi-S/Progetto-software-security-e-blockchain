@@ -192,13 +192,13 @@ def prova():
 @app.command()
 def prova_deploy():
     o = OnChain()
-    o.deploySC(path_file="app/contract.sol")
+    #o.deploySC(path_file="app/contract.sol")
     #o.setShardingAlgorithm(0)
     #o.setShardStatus(0, True)
     with open("app/compiled_contracts/Contratto.json", "r") as f:
         file = f.read().__str__()
         file.replace("\"", "\\\"")
-    #o.getDeployMap()
+    o.getDeployMap()
     #o.deleteSC(abi=file, id_SC=1, address="0x5E0AcA7cDb7f74BCc776A18B64ed4b2c52569788", url_shard="ws://127.0.0.1:8545")
     #o.call(address="0x2166FF23b1168e13609ebDE5181f0dF63D0b3E29", abi=file, chain_link="ws://127.0.0.1:8545", func="store", param=(777))
 

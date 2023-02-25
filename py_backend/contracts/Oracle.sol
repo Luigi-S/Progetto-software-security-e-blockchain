@@ -14,9 +14,9 @@ contract Oracle is AbstractOracle {
         emit ChangedManager(newAddress);
     }
 
-    function deployFound(address user, string calldata shard, string calldata name, bytes20 addr, bool reserved) 
+    function deployFound(address user, string calldata shard, string calldata name, bytes20 addr, bool reserved, uint32 timestamp) 
         external onlyOwner managerInitialized{
-        manager.fullfillDeploy(user, shard, name, addr, reserved);
+        manager.fullfillDeploy(user, shard, name, addr, reserved, timestamp);
     }
 
     
