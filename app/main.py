@@ -1,15 +1,29 @@
 import json
 import re
 from pathlib import Path
+import getpass
+
+from onchain import OnChain
 
 import typer
 from click import Abort
 
 from onchain import OnChain
 from Log import Logger
+<<<<<<< Updated upstream
 from call import Caller
 from compiler import Deployer
 from cliutils import show_methods, select_method, get_contract
+=======
+from call import Caller2
+
+from compiler import Deployer, Caller
+
+from cliutils import show_methods, select_method, get_contract, sign
+
+from consolemenu import *
+from consolemenu.items import *
+>>>>>>> Stashed changes
 
 title = """
      _______         _______  
@@ -23,102 +37,91 @@ title = """
      \$$$$$$$        \$$$$$$$ 
         --BLOCK BALANCER--
 """
-app = typer.Typer()
+#app = typer.Typer()
 
+def login():
+    user = sign()
+    title = "welcome " + user[0]
+    print(user[0])
+    subMenu = ConsoleMenu(title, "Seleziona una funzione", exit_option_text = "Logout")
 
+    # A FunctionItem runs a Python function when selected
+    #deployItem = FunctionItem("Deploy", deploy)
+    deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(user[0])], should_exit=False)
+    getMap = FunctionItem("Get Deploy Map", function=OnChain().getDeployMap, should_exit=False)
+    # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
+    # DEPLOY (FILE SOL)
+
+    # Once we're done creating them, we just add the items to the menu
+    subMenu.append_item(deployItem)
+    subMenu.append_item(getMap)
+
+    # Finally, we call show to show the menu and allow the user to interact
+    subMenu.show()
+
+def deployMenu(user:str):
+    print("Insert path: ")
+    path = input()
+    deploy(path, user)
 def initialize():
     # metodo per inizializzare l'esecuzione, e mostrare il prompt iniziale
     typer.echo(title)
 
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
-@app.command()
+#@app.command()
 def register():
     # TODO dettagliare meglio le richieste su password alla fine
     initialize()
-    typer.echo("Registering an account")
+    print("Registering an account")
     try:
-        address = typer.prompt(text="Address ")
+        address = str(input("Insert your address (starting with 0x and 40 characters long) "))
         while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is None:
-            typer.echo("Error: Address is not valid")
-            address = typer.prompt(text="Address ")
-        password = typer.prompt(confirmation_prompt=True, hide_input=True, text="Password ")
+            print("Error: Address is not valid")
+            address = str(input())
+
+        password = str(input("Insert your password (minimum eight characters, at least one letter, one number and one special character) "))
         if re.match(pattern="",
                     string=password) is None:  # "^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
             # in fase di sviluppo libertà sulla scelta della password, la regex è pronta per:
             # almeno una lettera, un numero, un carattere speciale:@$!%*#?&, almeno 8 caratteri
-            typer.echo("Error: Weak password \n"
+            print("Error: Weak password \n"
                        " Minimum eight characters, at least one letter, one number and one special character")
-            password = typer.prompt(confirmation_prompt=True, hide_input=True, text="Password ")
-        private_key = typer.prompt(confirmation_prompt=True, hide_input=True, text="Private Key ")
+            password = str(getpass.getpass())
+        private_key = str(input("Insert your private key (starting with 0x and 64 characters long) "))
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
-            typer.echo("Error: Private key is not valid")
-            private_key = typer.prompt(confirmation_prompt=True, hide_input=True, text="Private Key ")
+            print("Error: Private key is not valid")
+            private_key = str(input("Private key: "))
         logger = Logger(address)
         logger.register(private_key, password)
+        print("Account registered!")
     except Abort:
-        typer.echo("Closing...")
+        print("Closing...")
         # TODO valutare su quali azioni fare rollback
-        typer.echo("Hello")
+        print("Hello")
     except Exception as e:
+<<<<<<< Updated upstream
         typer.echo("Something went wrong")
         typer.echo(e.args[0])
+=======
+        print("Something went wrong")  # TODO distinguere le casistiche
+        print(e.args)
+        # typer.echo(e.with_traceback()) # - developement
+>>>>>>> Stashed changes
         exit(1)
 
-
-@app.command()
-def initial_deploy():
-    initialize()
-    path = "contracts/on_chain_manager/onChain.sol"
-    target = Path(path)
-    if not target.exists():
-        print("Cannot find the on chain manager file.sol")
-        raise SystemExit(1)
-    elif not target.is_dir():
-        try:
-            bytecode, abi = Deployer.compile(path)  # final version with Path
-            d = Deployer()
-            d.deploy(bytecode=bytecode["Manager"], abi=abi["Manager"])
-            d.deploy(bytecode=bytecode["Oracle"], abi=abi["Oracle"])
-
-            file = ""
-            with open("app/compiled_contracts/Manager.json", "r") as f:
-                file = f.read().__str__()
-                file.replace("\"", "\\\"")
-
-            file2 = ""
-            with open("app/compiled_contracts/Oracle.json", "r") as f:
-                file2 = f.read().__str__()
-                file2.replace("\"", "\\\"")
-
-            call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709",
-                 abi=file, func="addShard", param=("ws://127.0.0.1:8545", True))
-
-            #oracle_address = bytes.fromhex("3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26")
-            oracle_address = tuple(["0x3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26"])
-            call(address="0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709",
-                 abi=file, func="setOracle", param=oracle_address)
-
-            manager_address = tuple(["0x3Ad438090D6CA3c26f2e4C4c2E7833066B87e709"])
-            call(address="0x3Ec9745c7Bc93024e4EA3BaC26B89172D92C4c26",
-                 abi=file2, func="setManager", param=manager_address)
-        except Exception as e:
-            print(e)
-            raise SystemExit(1)
-
-
-@app.command()
+#@app.command()
 def compile_deploy(bytecode: str, abi):
     _deploy(path=bytecode, abi=abi)
 
 
-@app.command()
-def deploy(path: str):
-    _deploy(path=path, abi=[])
+#@app.command()
+def deploy(path: str, address: str = None):
+    _deploy(address=address, path=path, abi=[])
 
 # DA SPOSTARE IN onchain.py
-def _deploy(path: str, abi):
-    initialize()
+def _deploy(path: str, address: str, abi):
+    #initialize()
     target = Path(path)
     if not target.exists():
         print("The target directory doesn't exist.\n")
@@ -130,7 +133,7 @@ def _deploy(path: str, abi):
                 bytecode, abi = Deployer.compile(path)  # final version with Path
                 d = Deployer()
                 for elem in bytecode:
-                    d.deploy(bytecode=bytecode[elem], abi=abi[elem])
+                    d.deploy(addressGiven=address, bytecode=bytecode[elem], abi=abi[elem])
             except Exception:
                 raise SystemExit(1)
 
@@ -142,7 +145,7 @@ def _deploy(path: str, abi):
                 with open(abi, "r") as file2:
                     abi = json.load(file2)
                 d = Deployer()
-                d.deploy(bytecode=bytecode["object"], abi=abi)
+                d.deploy(addressGiven=address, bytecode=bytecode["object"], abi=abi)
             except Exception as e:
                 print(e.__class__)
                 raise SystemExit(1)
@@ -155,6 +158,7 @@ def _deploy(path: str, abi):
         print("Non valid input: impossible to find a deployable contract.")
         raise SystemExit(1)
 
+<<<<<<< Updated upstream
 
 # DA ELIMINARE
 @app.command()
@@ -186,13 +190,37 @@ def prova_deploy():
 
 
 @app.command()
+=======
+# DA ELIMINARE
+#@app.command()
+def call(address: str, abi, func: str, param):
+    initialize()
+    # TODO: controllare che l'address sia valido, se possibile
+    caller = Caller(address, abi, "ws://127.0.0.1:8545")
+    try:
+        caller.call(func, *param)
+    except TypeError as e:
+        caller.call(func, param)
+    # Si puo pensare di semplificare quest'interazione aprendo un menu con i vari metodi e facendo scegliere il
+    # metodo in un secondo momento
+
+#@app.command()
+>>>>>>> Stashed changes
 def help():
     initialize()
     # TODO: scrivere la guida ?
 
 
+<<<<<<< Updated upstream
 @app.command()
 def call():
+=======
+####CALL
+#@app.command()
+def call2():
+    #chain_link = typer.prompt(text="Link to the chain ")
+    #contract_address = typer.prompt(text="Contract address ")
+>>>>>>> Stashed changes
     try:
         chain_link, contract_address = get_contract(OnChain().getDeployMap())
     except Exception as e:
@@ -226,4 +254,26 @@ def call():
 
 
 if __name__ == "__main__":
-    app()
+    # Create the menu
+    menu = ConsoleMenu(title, "Progetto Software Security & Blockchain")
+
+    # A FunctionItem runs a Python function when selected
+    registrazione = FunctionItem("Register", register)
+    login = FunctionItem("Login", login)
+
+    #submenu = SelectionMenu(["item1", "item2", "item3"], title="Selection Menu", subtitle="These menu items return to the previous menu")
+
+    # Create the menu item that opens the Selection submenu
+    #submenu_item = SubmenuItem("Submenu item", submenu=submenu)
+    #submenu_item.set_menu(menu)
+    #UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
+    #DEPLOY (FILE SOL)
+
+
+    # Once we're done creating them, we just add the items to the menu
+    menu.append_item(registrazione)
+    menu.append_item(login)
+    #menu.append_item(submenu_item)
+
+    # Finally, we call show to show the menu and allow the user to interact
+    menu.show()

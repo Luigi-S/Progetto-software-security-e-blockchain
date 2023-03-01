@@ -9,7 +9,7 @@ from web3 import Web3
 
 from solcx import compile_standard
 
-from cliutils import sign
+from cliutils import sign, signWithAdress
 
 
 class ConnectionHost:
@@ -86,13 +86,13 @@ class Deployer:
             print("ERROR: system error occurred.")
             print(e4)
 
-    def deploy(self, bytecode, abi, url_shard="ws://127.0.0.1:10000"):
+    def deploy(self, bytecode, abi, addressGiven, url_shard="ws://127.0.0.1:10000"):
         try:
             w3 = ConnectionHost(url_shard).connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
-            address, key = sign()
+            address, key = signWithAdress(addressGiven)
             nonce = w3.eth.getTransactionCount(address)
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(
