@@ -5,25 +5,19 @@ import getpass
 
 from onchain import OnChain
 
-import typer
 from click import Abort
 
 from onchain import OnChain
 from Log import Logger
-<<<<<<< Updated upstream
-from call import Caller
-from compiler import Deployer
-from cliutils import show_methods, select_method, get_contract
-=======
-from call import Caller2
 
-from compiler import Deployer, Caller
+from call import Caller
+
+from compiler import Deployer
 
 from cliutils import show_methods, select_method, get_contract, sign
 
 from consolemenu import *
 from consolemenu.items import *
->>>>>>> Stashed changes
 
 title = """
      _______         _______  
@@ -63,16 +57,12 @@ def deployMenu(user:str):
     print("Insert path: ")
     path = input()
     deploy(path, user)
-def initialize():
-    # metodo per inizializzare l'esecuzione, e mostrare il prompt iniziale
-    typer.echo(title)
-
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 #@app.command()
 def register():
     # TODO dettagliare meglio le richieste su password alla fine
-    initialize()
+    #initialize()
     print("Registering an account")
     try:
         address = str(input("Insert your address (starting with 0x and 40 characters long) "))
@@ -100,14 +90,9 @@ def register():
         # TODO valutare su quali azioni fare rollback
         print("Hello")
     except Exception as e:
-<<<<<<< Updated upstream
-        typer.echo("Something went wrong")
-        typer.echo(e.args[0])
-=======
         print("Something went wrong")  # TODO distinguere le casistiche
         print(e.args)
         # typer.echo(e.with_traceback()) # - developement
->>>>>>> Stashed changes
         exit(1)
 
 #@app.command()
@@ -157,99 +142,40 @@ def _deploy(path: str, address: str, abi):
     else:
         print("Non valid input: impossible to find a deployable contract.")
         raise SystemExit(1)
-
-<<<<<<< Updated upstream
-
-# DA ELIMINARE
-@app.command()
-def prova():
-    file = ""
-    with open("app/compiled_contracts/Contratto.json", "r") as f:
-        file = f.read().__str__()
-        file.replace("\"", "\\\"")
-
-    try:
-        call(address="0x001De561C23cd1caFcBA2F8BE97D3C350f2EEb45", abi=file, func="addStudente", param=("Gig", 69))
-    except Exception as e:
-        print(e.__class__)
-        raise SystemExit(1)
-
-# DA ELIMINARE
-@app.command()
-def prova_deploy():
-    o = OnChain()
-    #o.deploySC(path_file="app/contract.sol")
-    #o.setShardingAlgorithm(0)
-    #o.setShardStatus(0, True)
-    with open("app/compiled_contracts/Contratto.json", "r") as f:
-        file = f.read().__str__()
-        file.replace("\"", "\\\"")
-    o.getDeployMap()
-    #o.deleteSC(abi=file, id_SC=1, address="0x5E0AcA7cDb7f74BCc776A18B64ed4b2c52569788", url_shard="ws://127.0.0.1:8545")
-    #o.call(address="0x2166FF23b1168e13609ebDE5181f0dF63D0b3E29", abi=file, chain_link="ws://127.0.0.1:8545", func="store", param=(777))
-
-
-@app.command()
-=======
-# DA ELIMINARE
-#@app.command()
-def call(address: str, abi, func: str, param):
-    initialize()
-    # TODO: controllare che l'address sia valido, se possibile
-    caller = Caller(address, abi, "ws://127.0.0.1:8545")
-    try:
-        caller.call(func, *param)
-    except TypeError as e:
-        caller.call(func, param)
-    # Si puo pensare di semplificare quest'interazione aprendo un menu con i vari metodi e facendo scegliere il
-    # metodo in un secondo momento
-
-#@app.command()
->>>>>>> Stashed changes
-def help():
-    initialize()
-    # TODO: scrivere la guida ?
-
-
-<<<<<<< Updated upstream
-@app.command()
 def call():
-=======
-####CALL
-#@app.command()
-def call2():
-    #chain_link = typer.prompt(text="Link to the chain ")
-    #contract_address = typer.prompt(text="Contract address ")
->>>>>>> Stashed changes
     try:
         chain_link, contract_address = get_contract(OnChain().getDeployMap())
     except Exception as e:
-        typer.echo(e.args)
-        typer.echo("Exiting...")
+        print(e.args)
+        print("Exiting...")
         exit(1)
     flag = True
     while flag:
-        abi_path = typer.prompt(text="Path to ABI ")
+        abi_path = input("Path to ABI ")
         try:
             with open(abi_path) as f:
                 data = f.read()
             abi = json.loads(data)
             flag = False
         except IOError:
-            typer.echo("Could not access ABI file")
+            print("Could not access ABI file")
         except json.decoder.JSONDecodeError:
-            typer.echo("File is not a JSON")
+            print("File is not a JSON")
     try:
         caller = Caller(chain_link=chain_link, contract_address=contract_address, abi=abi)
         show_methods(abi=caller.get_abi())
         go_on = True
         while go_on:
-            typer.echo(caller.method_call(select_method(abi)))
-            typer.echo()
-            go_on = typer.confirm("Do you want to keep working with this contract?")
+            print(caller.method_call(select_method(abi)))
+            print()
+            confirm = input('[c]Confirm or [v]Void: ')
+            if confirm.strip().lower() == 'c':
+                go_on = True
+            if confirm.strip().lower() == 'v':
+                go_on = False
     except Exception as e:
-        typer.echo(e.args[0])
-        typer.echo("Exiting...")
+        print(e.args[0])
+        print("Exiting...")
         exit(1)
 
 

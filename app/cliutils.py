@@ -19,13 +19,8 @@ def sign():
                 key = logger.getKey(passwd=input("Password for " + str(logger.getAddress()) + " "))
                 return logger.getAddress(), key
             except Exception as e:
-<<<<<<< Updated upstream
-                # fornire minor informazione possibile -> ridurre canali collaterali
-                typer.echo("Wrong password")
-=======
                 print("Wrong password")
                 print(e)
->>>>>>> Stashed changes
     except Exception as e:
         # handling da migliorare.
         print("Login failed")
@@ -61,11 +56,7 @@ def signWithAdress(address):
 def show_methods(abi):
     k = 0
     for c in abi:
-<<<<<<< Updated upstream
-        typer.echo("METHOD " + str(k) + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
-=======
         print("METHOD " + k.__str__() + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
->>>>>>> Stashed changes
         k += 1
         message = "INPUTS: "
         for i in range(len(c["inputs"])):

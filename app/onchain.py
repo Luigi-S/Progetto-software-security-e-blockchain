@@ -14,10 +14,10 @@ class OnChain():
     manager: Caller
 
     def __init__(self):
-        load_dotenv("py_backend/.env")
+        load_dotenv("../py_backend/.env")
         self.manager_address = os.environ.get("MANAGER_ADDRESS")
 
-        with open("py_backend/abi/Manager.json", "r") as f:
+        with open("../py_backend/abi/Manager.json", "r") as f:
             self.manager_abi = f.read().__str__()
             self.manager_abi.replace("\"", "\\\"")
 
