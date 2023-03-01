@@ -1,11 +1,9 @@
-import json
 import os
 
 from dotenv import load_dotenv
-from web3.contract import Contract
 from pathlib import Path
 
-from compiler import Caller
+from app.call import Caller
 from compiler import Deployer
 
 class OnChain():
@@ -13,30 +11,23 @@ class OnChain():
     manager_shard = "ws://127.0.0.1:10000"
     manager_abi: str
     manager_address: str
-    contract: Contract
+    manager: Caller
 
     def __init__(self):
         load_dotenv("py_backend/.env")
         self.manager_address = os.environ.get("MANAGER_ADDRESS")
 
-        """
-        with open("py_backend/.env") as f:
-            manager_address = f.readline().__str__()
-            manager_address = manager_address[16:]
-            manager_address
-            self.manager_address = manager_address
-        """
-
         with open("py_backend/abi/Manager.json", "r") as f:
             self.manager_abi = f.read().__str__()
             self.manager_abi.replace("\"", "\\\"")
 
-        self.contract = Caller(contract_address=self.manager_address, abi=self.manager_abi, chain_link=self.manager_shard).get_contract()
+        self.manager = Caller(contract_address=self.manager_address, abi=self.manager_abi, chain_link=self.manager_shard) #.get_contract()
+
 
     def call(self, address: str, abi, func: str, param, chain_link):
-        caller = Caller(address, abi, chain_link)
+        caller = Caller(contract_address=address, abi=abi, chain_link=chain_link)
         try:
-            tx_receipt = caller.call(func, *param)
+            tx_receipt = caller.signTransaction(func, *param)
             return tx_receipt
         except TypeError as e:
             try:
@@ -54,10 +45,13 @@ class OnChain():
                 raise SystemExit(1)
             elif not target.is_dir():
                 if target.suffix == ".sol":
-                    func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
-                    url = func(nome_sc).call().replace("ganaches", "127.0.0.1")
-                    self.call(address=self.manager_address, abi=self.manager_abi,
-                              func="reserveDeploy", param=([nome_sc]), chain_link=self.manager_shard)
+                    #func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
+                    receipt = self.manager.signTransaction(
+                        self.manager.contract.functions.reserveDeploy,
+                        [nome_sc]
+                    )
+                    event = self.manager.contract.events.DeployReserved().processReceipt(receipt)
+                    url = event[0].args["url"]
                     print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
                     bytecode, abi = Deployer.compile(path_file)
@@ -82,18 +76,23 @@ class OnChain():
 
     def deleteSC(self, abi, address, url_shard):
         try:
-            self.call(address=address, abi=abi, func="destroy", param=(None), chain_link=url_shard)
+            caller = Caller(contract_address=address, abi=abi, chain_link=url_shard)
+            caller.signTransaction(caller.contract.functions.destroy())
             print("Smart contract successfully deleted.")
-
+        except AttributeError:
+            print("Smart contract is not deletable")
+            exit(1)
         except Exception as e:
             print(e)
             raise SystemExit(1)
 
     def setShardingAlgorithm(self, id_alg: int):
         try:
-            tx_receipt = self.call(address=self.manager_address, abi=self.manager_abi,
-                                   func="setAlg", param=(id_alg), chain_link=self.manager_shard)
-            event = self.contract.events.ChangedAlgorithm().processReceipt(tx_receipt)
+            receipt = self.manager.signTransaction(
+                self.manager.contract.functions.reserveDeploy,
+                (id_alg)
+            )
+            event = self.manager.contract.events.ChangedAlgorithm().processReceipt(receipt)
             print("Sharding algorithm changed to: " + str(event[0].args["newAlg"]))
         except Exception as e:
             #print(e)
@@ -101,17 +100,16 @@ class OnChain():
 
     def setShardStatus(self, shard_id: int, status: bool):
         try:
-            self.call(address=self.manager_address, abi=self.manager_abi,
-                      func="setShardStatus", param=(shard_id, status), chain_link=self.manager_shard)
+            self.manager.signTransaction(
+                self.manager.contract.functions.setShardStatus,
+                (shard_id, status)
+            )
         except Exception as e:
             # print(e)
             raise SystemExit(1)
 
     def getDeployMap(self):
         try:
-            func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("getDeployMap")
-            deploy_map = func().call()
-            print(deploy_map)
-
+            print(self.manager.contract.functions.getDeployMap().call())
         except Exception as e:
             raise Exception("Could not get contract list...")

@@ -6,12 +6,9 @@ import typer
 from click import Abort
 
 from onchain import OnChain
-
 from Log import Logger
-from call import Caller2
-
-from compiler import Deployer, Caller
-
+from call import Caller
+from compiler import Deployer
 from cliutils import show_methods, select_method, get_contract
 
 title = """
@@ -37,8 +34,7 @@ def initialize():
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 @app.command()
 def register():
-    # TODO dettagliare meglio le richieste su password, eventualmente anche per address,
-    #  che sono eseguite anche da eth_account
+    # TODO dettagliare meglio le richieste su password alla fine
     initialize()
     typer.echo("Registering an account")
     try:
@@ -65,9 +61,8 @@ def register():
         # TODO valutare su quali azioni fare rollback
         typer.echo("Hello")
     except Exception as e:
-        typer.echo("Something went wrong")  # TODO distinguere le casistiche
-        typer.echo(e.args)
-        # typer.echo(e.with_traceback()) # - developement
+        typer.echo("Something went wrong")
+        typer.echo(e.args[0])
         exit(1)
 
 
@@ -160,19 +155,6 @@ def _deploy(path: str, abi):
         print("Non valid input: impossible to find a deployable contract.")
         raise SystemExit(1)
 
-# DA ELIMINARE
-@app.command()
-def call(address: str, abi, func: str, param):
-    initialize()
-    # TODO: controllare che l'address sia valido, se possibile
-    caller = Caller(address, abi, "ws://127.0.0.1:8545")
-    try:
-        caller.call(func, *param)
-    except TypeError as e:
-        caller.call(func, param)
-    # Si puo pensare di semplificare quest'interazione aprendo un menu con i vari metodi e facendo scegliere il
-    # metodo in un secondo momento
-
 
 # DA ELIMINARE
 @app.command()
@@ -209,20 +191,14 @@ def help():
     # TODO: scrivere la guida ?
 
 
-####CALL
 @app.command()
-def call2():
-    #chain_link = typer.prompt(text="Link to the chain ")
-    #contract_address = typer.prompt(text="Contract address ")
+def call():
     try:
         chain_link, contract_address = get_contract(OnChain().getDeployMap())
     except Exception as e:
-        typer.echo(e.args[0])
+        typer.echo(e.args)
         typer.echo("Exiting...")
         exit(1)
-    while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=contract_address) is None:
-        typer.echo("Error: Address is not valid")
-        contract_address = typer.prompt(text="Contract address ")
     flag = True
     while flag:
         abi_path = typer.prompt(text="Path to ABI ")
@@ -236,7 +212,7 @@ def call2():
         except json.decoder.JSONDecodeError:
             typer.echo("File is not a JSON")
     try:
-        caller = Caller2(chain_link, contract_address, abi)
+        caller = Caller(chain_link=chain_link, contract_address=contract_address, abi=abi)
         show_methods(abi=caller.get_abi())
         go_on = True
         while go_on:

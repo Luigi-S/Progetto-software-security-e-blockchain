@@ -20,6 +20,7 @@ def sign():
                 key = logger.getKey(passwd=typer.prompt(hide_input=True, text=f"Password for {logger.getAddress()}"))
                 return logger.getAddress(), key
             except Exception as e:
+                # fornire minor informazione possibile -> ridurre canali collaterali
                 typer.echo("Wrong password")
     except Exception as e:
         # handling da migliorare.
@@ -32,7 +33,7 @@ def sign():
 def show_methods(abi):
     k = 0
     for c in abi:
-        typer.echo("METHOD " + k.__str__() + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
+        typer.echo("METHOD " + str(k) + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
         k += 1
         message = "INPUTS: "
         for i in range(len(c["inputs"])):
