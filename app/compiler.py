@@ -55,11 +55,8 @@ class Deployer:
             if not os.path.exists("app/compiled_contracts"):
                 os.makedirs("app/compiled_contracts")
 
-            contract_names = []
-
             # Crea il file.json di ogni contratto deployato contenente l'abi di esso
             for contract in compiled_sol["contracts"][contract_name]:
-                contract_names.append(contract)
                 with open("app/compiled_contracts/" + contract + ".json", "w") as file:
                     json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
@@ -73,7 +70,7 @@ class Deployer:
                     compiled_sol["contracts"][contract_name][contract]["metadata"]
                 )["output"]["abi"]
 
-            return bytecode, abi, contract_names
+            return bytecode, abi
 
 
         except solcx.exceptions.SolcError as e:

@@ -57,21 +57,21 @@ class OnChain():
             elif not target.is_dir():
                 if target.suffix == ".sol":
 
-                    bytecode, abi, contract_names = Deployer.compile(path_file)
+                    bytecode, abi = Deployer.compile(path_file)
 
                     #func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
 
-                    for contract_name in contract_names:
+                    for elem in bytecode:
                         receipt = self.manager.signTransaction(
                             self.manager.contract.functions.reserveDeploy,
-                            (contract_name)
+                            tuple([elem])
                         )
                         event = self.manager.contract.events.DeployUrl().processReceipt(receipt)
                         url = event[0].args["url"]
                         print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
                         d = Deployer()
-                        d.deploy(bytecode=bytecode[contract_name], abi=abi[contract_name], url_shard=url, address=address, key=key)
+                        d.deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=address, key=key)
 
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
