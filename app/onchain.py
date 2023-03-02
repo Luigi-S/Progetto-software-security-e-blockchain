@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from app.call import Caller
+from app.cliutils import signWithAdress
 from compiler import Deployer
 
 class OnChain():
@@ -14,12 +15,20 @@ class OnChain():
     manager: Caller
 
     def __init__(self):
-        load_dotenv("../py_backend/.env")
-        self.manager_address = os.environ.get("MANAGER_ADDRESS")
+        try:
+            load_dotenv("./py_backend/.env")
+            self.manager_address = os.environ.get("MANAGER_ADDRESS")
+        except:
+            print("SYSTEM ERROR: Impossible to find file ./py_backend/.env")
+            raise SystemExit(1)
 
-        with open("../py_backend/abi/Manager.json", "r") as f:
-            self.manager_abi = f.read().__str__()
-            self.manager_abi.replace("\"", "\\\"")
+        try:
+            with open("./py_backend/abi/Manager.json", "r") as f:
+                self.manager_abi = f.read().__str__()
+                self.manager_abi.replace("\"", "\\\"")
+        except:
+            print("SYSTEM ERROR: Impossible to find file Manager.json")
+            raise SystemExit(1)
 
         self.manager = Caller(contract_address=self.manager_address, abi=self.manager_abi, chain_link=self.manager_shard) #.get_contract()
 
@@ -36,8 +45,10 @@ class OnChain():
             except Exception:
                 print("Something went wrong :(")
 
-    def deploySC(self, path_file: str, nome_sc: str = ""):
+    def deploySC(self, path_file: str, addressGiven):
         try:
+            address, key = signWithAdress(addressGiven)
+
             target = Path(path_file)
             if not target.exists():
                 print("The target directory doesn't exist.\n")
@@ -45,19 +56,22 @@ class OnChain():
                 raise SystemExit(1)
             elif not target.is_dir():
                 if target.suffix == ".sol":
-                    #func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
-                    receipt = self.manager.signTransaction(
-                        self.manager.contract.functions.reserveDeploy,
-                        [nome_sc]
-                    )
-                    event = self.manager.contract.events.DeployReserved().processReceipt(receipt)
-                    url = event[0].args["url"]
-                    print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
-                    bytecode, abi = Deployer.compile(path_file)
-                    d = Deployer()
-                    for elem in bytecode:
-                        d.deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url)
+                    bytecode, abi, contract_names = Deployer.compile(path_file)
+
+                    #func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
+
+                    for contract_name in contract_names:
+                        receipt = self.manager.signTransaction(
+                            self.manager.contract.functions.reserveDeploy,
+                            (contract_name)
+                        )
+                        event = self.manager.contract.events.DeployUrl().processReceipt(receipt)
+                        url = event[0].args["url"]
+                        print("The contract is ready to be deployed to the shard at the url: " + str(url))
+
+                        d = Deployer()
+                        d.deploy(bytecode=bytecode[contract_name], abi=abi[contract_name], url_shard=url, address=address, key=key)
 
                 else:
                     print("Non valid input: impossible to find a deployable contract.")

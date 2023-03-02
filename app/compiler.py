@@ -55,8 +55,11 @@ class Deployer:
             if not os.path.exists("app/compiled_contracts"):
                 os.makedirs("app/compiled_contracts")
 
+            contract_names = []
+
             # Crea il file.json di ogni contratto deployato contenente l'abi di esso
             for contract in compiled_sol["contracts"][contract_name]:
+                contract_names.append(contract)
                 with open("app/compiled_contracts/" + contract + ".json", "w") as file:
                     json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
@@ -70,7 +73,7 @@ class Deployer:
                     compiled_sol["contracts"][contract_name][contract]["metadata"]
                 )["output"]["abi"]
 
-            return bytecode, abi
+            return bytecode, abi, contract_names
 
 
         except solcx.exceptions.SolcError as e:
@@ -86,13 +89,12 @@ class Deployer:
             print("ERROR: system error occurred.")
             print(e4)
 
-    def deploy(self, bytecode, abi, addressGiven, url_shard="ws://127.0.0.1:10000"):
+    def deploy(self, bytecode, abi, address, key, url_shard="ws://127.0.0.1:10000"):
         try:
             w3 = ConnectionHost(url_shard).connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)
             # Get the latest transaction
-            address, key = signWithAdress(addressGiven)
             nonce = w3.eth.getTransactionCount(address)
             # Submit the transaction that deploys the contract
             transaction = contract.constructor().buildTransaction(

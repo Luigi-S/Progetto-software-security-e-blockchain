@@ -96,7 +96,7 @@ abstract contract AbstractManager is Ownable {
     }
 
     //calcola shard per deploy
-    function reserveDeploy(string calldata name) external atLeastOneShard returns(string memory){
+    function reserveDeploy(string calldata name) external atLeastOneShard{ //returns(string memory){
         uint8 shardId = algs[currentAlg]();
         string memory url = "";
         if(shardId < maxShard){
@@ -106,7 +106,8 @@ abstract contract AbstractManager is Ownable {
         else{
             revert("No shard available for deploy");
         }
-        return url;
+        emit DeployUrl(url);
+        //return url;
     }
 
     //va chiamata solo dopo il deploy e la verifica dell'oracolo
@@ -180,4 +181,5 @@ abstract contract AbstractManager is Ownable {
     event ShardAdded(uint8 shardId, string shard);
     event ChangedOracle(address newAddress);
     event ChangedAlgorithm(uint8 newAlg);
+    event DeployUrl(string url);
 }

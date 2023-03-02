@@ -39,10 +39,12 @@ def login():
     print(user[0])
     subMenu = ConsoleMenu(title, "Seleziona una funzione", exit_option_text = "Logout")
 
+    on_chain = OnChain()
+
     # A FunctionItem runs a Python function when selected
     #deployItem = FunctionItem("Deploy", deploy)
     deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(user[0])], should_exit=False)
-    getMap = FunctionItem("Get Deploy Map", function=OnChain().getDeployMap, should_exit=False)
+    getMap = FunctionItem("Get Deploy Map", function=on_chain.getDeployMap, should_exit=False)
     # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
     # DEPLOY (FILE SOL)
 
@@ -54,9 +56,10 @@ def login():
     subMenu.show()
 
 def deployMenu(user:str):
+    on_chain = OnChain()
     print("Insert path: ")
     path = input()
-    deploy(path, user)
+    on_chain.deploySC(path, user)
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 #@app.command()
@@ -95,53 +98,7 @@ def register():
         # typer.echo(e.with_traceback()) # - developement
         exit(1)
 
-#@app.command()
-def compile_deploy(bytecode: str, abi):
-    _deploy(path=bytecode, abi=abi)
 
-
-#@app.command()
-def deploy(path: str, address: str = None):
-    _deploy(address=address, path=path, abi=[])
-
-# DA SPOSTARE IN onchain.py
-def _deploy(path: str, address: str, abi):
-    #initialize()
-    target = Path(path)
-    if not target.exists():
-        print("The target directory doesn't exist.\n")
-        print("Tip: if you tried to insert a file name, you have to specify the correct format.")
-        raise SystemExit(1)
-    elif not target.is_dir():
-        if target.suffix == ".sol":
-            try:
-                bytecode, abi = Deployer.compile(path)  # final version with Path
-                d = Deployer()
-                for elem in bytecode:
-                    d.deploy(addressGiven=address, bytecode=bytecode[elem], abi=abi[elem])
-            except Exception:
-                raise SystemExit(1)
-
-        # DA SISTEMARE
-        elif target.suffix == ".json" and abi != [] and Path(abi).suffix == ".json":
-            try:
-                with open(path, "r") as file:
-                    bytecode = json.load(file)
-                with open(abi, "r") as file2:
-                    abi = json.load(file2)
-                d = Deployer()
-                d.deploy(addressGiven=address, bytecode=bytecode["object"], abi=abi)
-            except Exception as e:
-                print(e.__class__)
-                raise SystemExit(1)
-
-        else:
-            print("Non valid input: impossible to find a deployable contract.")
-            raise SystemExit(1)
-
-    else:
-        print("Non valid input: impossible to find a deployable contract.")
-        raise SystemExit(1)
 def call():
     try:
         chain_link, contract_address = get_contract(OnChain().getDeployMap())
