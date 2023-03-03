@@ -1,4 +1,4 @@
-typer
+console-menu
 web3
 py-solc-x
 python-dotenv

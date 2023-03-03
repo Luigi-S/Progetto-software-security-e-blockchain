@@ -1,7 +1,7 @@
 from web3.exceptions import InvalidAddress
 
-from cliutils import insert_args, sign
-from compiler import ConnectionHost
+from ConnectionHost import ConnectionHost
+from cliutils import insert_args, signWithAdress
 
 
 class Caller:
@@ -15,7 +15,7 @@ class Caller:
     def get_abi(self):
         return self.contract.functions.abi
 
-    def method_call(self, method_i):
+    def method_call(self, method_i, address):
         try:
             c = self.get_abi()[int(method_i)]
             string_args = "("
@@ -28,7 +28,7 @@ class Caller:
             method_type = c["stateMutability"]
             if method_type != "pure" and method_type != "view" and method_type != "constant":
                 args = insert_args(inputs)
-                return self.signTransaction(func, args)
+                return self.signTransaction(func, address, args)
             else:
                 args = insert_args(inputs)
                 return func.__call__(*args).call()
@@ -56,8 +56,8 @@ class Caller:
             print("System error occurred.")
             exit(1)
 
-    def signTransaction(self, func, args=()):
-        my_address, private_key = sign()
+    def signTransaction(self, func, my_address, args=()):
+        private_key = signWithAdress(my_address)
         transaction = func(*args).buildTransaction({
             "chainId": self.w3.eth.chain_id,
             "gasPrice": self.w3.eth.gas_price,  # stima il costo con una call

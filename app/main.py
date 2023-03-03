@@ -1,18 +1,16 @@
 import json
 import re
-from pathlib import Path
+
 import getpass
 
-from onchain import OnChain
-
 from click import Abort
+from web3.datastructures import AttributeDict
 
 from onchain import OnChain
 from Log import Logger
 
 from call import Caller
 
-from compiler import Deployer
 
 from cliutils import show_methods, select_method, get_contract, signWithAdress
 
@@ -55,12 +53,14 @@ def login():
     #deployItem = FunctionItem("Deploy", deploy)
     deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(address)], should_exit=False)
     getMap = FunctionItem("Get Deploy Map", function=on_chain.getDeployMap, should_exit=False)
+    callItem = FunctionItem("Call", function=call, args=[str(address)], should_exit=False)
     # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
     # DEPLOY (FILE SOL)
 
     # Once we're done creating them, we just add the items to the menu
     subMenu.append_item(deployItem)
     subMenu.append_item(getMap)
+    subMenu.append_item(callItem)
 
     # Finally, we call show to show the menu and allow the user to interact
     subMenu.show()
@@ -72,7 +72,6 @@ def deployMenu(user:str):
     on_chain.deploySC(path, user)
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
-#@app.command()
 def register():
     # TODO dettagliare meglio le richieste su password alla fine
     #initialize()
@@ -109,7 +108,7 @@ def register():
         exit(1)
 
 
-def call():
+def call(my_address):
     try:
         chain_link, contract_address = get_contract(OnChain().getDeployMap())
     except Exception as e:
@@ -133,7 +132,15 @@ def call():
         show_methods(abi=caller.get_abi())
         go_on = True
         while go_on:
-            print(caller.method_call(select_method(abi)))
+            res = caller.method_call(select_method(abi), my_address)
+            if isinstance(res, AttributeDict) and "status" in res.keys():
+                if res.status == 1:
+                    print("Transaction has been correctly sent")
+                else:
+                    print("Transaction has been reverted...")
+                    print("Tip: check your connection to the network and the account balance")
+            else:
+                print(res)
             print()
             confirm = input('[c]Confirm or [v]Void: ')
             if confirm.strip().lower() == 'c':

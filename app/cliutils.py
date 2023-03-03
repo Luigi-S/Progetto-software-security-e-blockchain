@@ -28,6 +28,7 @@ def sign():
             print(e.args[0])
         exit(1)
 
+
 def signWithAdress(address):
     # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
     try:
@@ -45,6 +46,8 @@ def signWithAdress(address):
         if e.args != ():
             print(e.args[0])
         exit(1)
+
+
 def show_methods(abi):
     k = 0
     for c in abi:
@@ -76,22 +79,29 @@ def insert_args(inputs):
     while True:
         args = ()
         for i in range(len(inputs)):
+            flag = True
             input_type = int if inputs[i]["type"].__contains__("int") else \
-                bool if inputs[i]["type"].__contains__("bool") else \
-                    str  # if inputs[i]["type"].__contains__("string")
-            a = input(
-                (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"]
-            )
+                bool if inputs[i]["type"].__contains__("bool") else str
+            #   if inputs[i]["type"].__contains__("string")...
+            while flag:
+                a = input(
+                    (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"]
+                )
+                try:
+                    input_type(a)
+                except ValueError:
+                    continue
+                flag = False
             args += (a,)
         try:
             return args
         except TypeError as e:
             raise Exception("Error occurred: malformed input\n" + e.args[0])
 
-def get_contract(deploy_map):
 
+def get_contract(deploy_map):
     for i in range(len(deploy_map)):
-        print(str(i)+") - " + deploy_map[i].name + " - shard : " + str(deploy_map[i].shardId))
+        print(str(i) + ") - " + deploy_map[i].name + " - shard : " + str(deploy_map[i].shardId))
     while True:
         index = int(input("Insert a valid index for a contract"))
         try:

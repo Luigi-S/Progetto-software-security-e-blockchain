@@ -5,10 +5,10 @@ from pathlib import Path
 
 from app.call import Caller
 from app.cliutils import signWithAdress
-from compiler import Deployer
+from compiler import compile, deploy
+
 
 class OnChain():
-
     manager_shard = "ws://127.0.0.1:10000"
     manager_abi: str
     manager_address: str
@@ -30,9 +30,10 @@ class OnChain():
             print("SYSTEM ERROR: Impossible to find file Manager.json")
             raise SystemExit(1)
 
-        self.manager = Caller(contract_address=self.manager_address, abi=self.manager_abi, chain_link=self.manager_shard) #.get_contract()
+        self.manager = Caller(contract_address=self.manager_address, abi=self.manager_abi,
+                              chain_link=self.manager_shard)  # .get_contract()
 
-
+    """
     def call(self, address: str, abi, func: str, param, chain_link):
         caller = Caller(contract_address=address, abi=abi, chain_link=chain_link)
         try:
@@ -44,11 +45,10 @@ class OnChain():
                 return tx_receipt
             except Exception:
                 print("Something went wrong :(")
+    """
 
     def deploySC(self, path_file: str, addressGiven):
         try:
-            key = signWithAdress(addressGiven)
-
             target = Path(path_file)
             if not target.exists():
                 print("The target directory doesn't exist.\n")
@@ -56,23 +56,20 @@ class OnChain():
                 raise SystemExit(1)
             elif not target.is_dir():
                 if target.suffix == ".sol":
-
-                    bytecode, abi = Deployer.compile(path_file)
-
-                    #func = Caller(self.manager_address, self.manager_abi, self.manager_shard).get_func("reserveDeploy")
+                    bytecode, abi = compile(path_file)
 
                     for elem in bytecode:
                         receipt = self.manager.signTransaction(
                             self.manager.contract.functions.reserveDeploy,
+                            addressGiven,
                             tuple([elem])
                         )
                         event = self.manager.contract.events.DeployUrl().processReceipt(receipt)
                         url = event[0].args["url"]
                         print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
-                        d = Deployer()
-                        d.deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=addressGiven, key=key)
-
+                        deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=addressGiven,
+                               key=signWithAdress(addressGiven))
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
                     raise SystemExit(1)
@@ -85,13 +82,13 @@ class OnChain():
             print(e)
             raise SystemExit(1)
 
-    #def findSC(self):
-        #Verifica se lo SC è deployato in qualche shard e in tale caso chiama deleteSC() passando indirizzo SC e url_shard
+    # def findSC(self):
+    # Verifica se lo SC è deployato in qualche shard e in tale caso chiama deleteSC() passando indirizzo SC e url_shard
 
-    def deleteSC(self, abi, address, url_shard):
+    def deleteSC(self, abi, address, url_shard, my_address):
         try:
             caller = Caller(contract_address=address, abi=abi, chain_link=url_shard)
-            caller.signTransaction(caller.contract.functions.destroy())
+            caller.signTransaction(caller.contract.functions.destroy(), my_address)
             print("Smart contract successfully deleted.")
         except AttributeError:
             print("Smart contract is not deletable")
@@ -100,22 +97,24 @@ class OnChain():
             print(e)
             raise SystemExit(1)
 
-    def setShardingAlgorithm(self, id_alg: int):
+    def setShardingAlgorithm(self, id_alg: int, my_address):
         try:
             receipt = self.manager.signTransaction(
                 self.manager.contract.functions.reserveDeploy,
+                my_address,
                 (id_alg)
             )
             event = self.manager.contract.events.ChangedAlgorithm().processReceipt(receipt)
             print("Sharding algorithm changed to: " + str(event[0].args["newAlg"]))
         except Exception as e:
-            #print(e)
+            # print(e)
             raise SystemExit(1)
 
-    def setShardStatus(self, shard_id: int, status: bool):
+    def setShardStatus(self, shard_id: int, status: bool, my_address):
         try:
             self.manager.signTransaction(
                 self.manager.contract.functions.setShardStatus,
+                my_address,
                 (shard_id, status)
             )
         except Exception as e:
