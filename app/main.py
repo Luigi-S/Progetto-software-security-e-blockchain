@@ -14,7 +14,7 @@ from call import Caller
 
 from compiler import Deployer
 
-from cliutils import show_methods, select_method, get_contract, sign
+from cliutils import show_methods, select_method, get_contract, signWithAdress
 
 from consolemenu import *
 from consolemenu.items import *
@@ -34,16 +34,26 @@ title = """
 #app = typer.Typer()
 
 def login():
-    user = sign()
-    title = "welcome " + user[0]
-    print(user[0])
+    flag = True
+    while flag:
+        try:
+            print("Insert address: ")
+            address = input()
+            logger = Logger(address)
+            flag = False
+        except Exception as e:
+            if e.args != ():
+                print(e.args[0])
+    signWithAdress(address)
+    title = "welcome " + address
+    print(address)
     subMenu = ConsoleMenu(title, "Seleziona una funzione", exit_option_text = "Logout")
 
     on_chain = OnChain()
 
     # A FunctionItem runs a Python function when selected
     #deployItem = FunctionItem("Deploy", deploy)
-    deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(user[0])], should_exit=False)
+    deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(address)], should_exit=False)
     getMap = FunctionItem("Get Deploy Map", function=on_chain.getDeployMap, should_exit=False)
     # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
     # DEPLOY (FILE SOL)

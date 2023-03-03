@@ -31,19 +31,11 @@ def sign():
 def signWithAdress(address):
     # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
     try:
-        flag = True
-        while flag:
-            try:
-                logger = Logger(address)
-                flag = False
-            except Exception as e:
-                print("Could not log")
-                if e.args != ():
-                    print(e.args[0])
         while True:
             try:
+                logger = Logger(address)
                 key = logger.getKey(passwd=input("Password for " + str(logger.getAddress()) + " "))
-                return logger.getAddress(), key
+                return key
             except Exception as e:
                 print("Wrong password")
                 print(e)

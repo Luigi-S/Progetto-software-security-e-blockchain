@@ -86,8 +86,9 @@ class Deployer:
             print("ERROR: system error occurred.")
             print(e4)
 
-    def deploy(self, bytecode, abi, address, key, url_shard="ws://127.0.0.1:10000"):
+    def deploy(self, bytecode, abi, address, key, url_shard):
         try:
+            url_shard = url_shard.replace("ganaches", "127.0.0.1")
             w3 = ConnectionHost(url_shard).connect()
             # Create the contract in Python
             contract = w3.eth.contract(abi=abi, bytecode=bytecode)

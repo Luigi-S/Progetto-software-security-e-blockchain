@@ -47,7 +47,7 @@ class OnChain():
 
     def deploySC(self, path_file: str, addressGiven):
         try:
-            address, key = signWithAdress(addressGiven)
+            key = signWithAdress(addressGiven)
 
             target = Path(path_file)
             if not target.exists():
@@ -71,7 +71,7 @@ class OnChain():
                         print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
                         d = Deployer()
-                        d.deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=address, key=key)
+                        d.deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=addressGiven, key=key)
 
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
