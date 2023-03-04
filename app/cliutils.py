@@ -51,18 +51,19 @@ def signWithAdress(address):
 def show_methods(abi):
     k = 0
     for c in abi:
-        print("METHOD " + k.__str__() + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
-        k += 1
-        message = "INPUTS: "
-        for i in range(len(c["inputs"])):
-            message += (c["inputs"][i]["name"] if (c["inputs"][i]["name"] != "") else "_") + " : " + c["inputs"][i][
-                "type"] + " - "
-        print(message)
-        message = "OUTPUTS: "
-        for j in range(len(c["outputs"])):
-            message += c["outputs"][j]["type"] + " - "
-        print(message)
-        print("       -----------")
+        if c.get("type") == "function":
+            print("METHOD " + k.__str__() + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
+            k += 1
+            message = "INPUTS: "
+            for i in range(len(c["inputs"])):
+                message += (c["inputs"][i]["name"] if (c["inputs"][i]["name"] != "") else "_") + " : " + c["inputs"][i][
+                    "type"] + " - "
+            print(message)
+            message = "OUTPUTS: "
+            for j in range(len(c["outputs"])):
+                message += c["outputs"][j]["type"] + " - "
+            print(message)
+            print("       -----------")
 
 
 def select_method(abi):
@@ -101,10 +102,10 @@ def insert_args(inputs):
 
 def get_contract(deploy_map):
     for i in range(len(deploy_map)):
-        print(str(i) + ") - " + deploy_map[i].name + " - shard : " + str(deploy_map[i].shardId))
+        print(str(i) + ") - " + deploy_map[i][3] + " - shard : " + str(deploy_map[i][0]))
     while True:
-        index = int(input("Insert a valid index for a contract"))
+        index = int(input("Insert a valid index for a contract: "))
         try:
-            return deploy_map[index].chainUrl, deploy_map[index].addr
+            return deploy_map[index][1], deploy_map[index][2]
         except ValueError:
             print("Invalid index selected")

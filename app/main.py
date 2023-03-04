@@ -52,7 +52,7 @@ def login():
     # A FunctionItem runs a Python function when selected
     #deployItem = FunctionItem("Deploy", deploy)
     deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(address)], should_exit=False)
-    getMap = FunctionItem("Get Deploy Map", function=on_chain.getDeployMap, should_exit=False)
+    getMap = FunctionItem("Get Deploy Map", function=on_chain.showDeployMap, should_exit=False)
     callItem = FunctionItem("Call", function=call, args=[str(address)], should_exit=False)
     # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
     # DEPLOY (FILE SOL)

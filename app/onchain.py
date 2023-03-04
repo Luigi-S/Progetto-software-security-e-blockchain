@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
+from web3 import Web3
+
 from app.call import Caller
 from app.cliutils import signWithAdress
 from compiler import compile, deploy
@@ -109,16 +111,26 @@ class OnChain():
             # print(e)
             raise SystemExit(1)
 
-    def getDeployMap(self):
+    def showDeployMap(self):
         try:
             pt = PrettyTable()
             pt.field_names = ["Id Shard", "Url Shard", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
             map = self.manager.contract.functions.getDeployMap().call()
             for sc in map:
                 x = list(sc)
-                #x[2] = x[2].decode("utf-8", "ignore")
+                x[2] = Web3.toChecksumAddress(x[2].hex())
                 x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
                 pt.add_row(x)
             print(pt)
         except Exception as e:
             raise Exception("Could not get contract list...")
+
+    def getDeployMap(self):
+        map = self.manager.contract.functions.getDeployMap().call()
+        x_list = []
+        for sc in map:
+            x = list(sc)
+            x[2] = Web3.toChecksumAddress(x[2].hex())
+            x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
+            x_list.append(x)
+        return x_list
