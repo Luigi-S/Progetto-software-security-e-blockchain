@@ -6,6 +6,8 @@ from pathlib import Path
 from app.call import Caller
 from app.cliutils import signWithAdress
 from compiler import compile, deploy
+from prettytable import PrettyTable
+from datetime import datetime
 
 
 class OnChain():
@@ -32,20 +34,6 @@ class OnChain():
 
         self.manager = Caller(contract_address=self.manager_address, abi=self.manager_abi,
                               chain_link=self.manager_shard)  # .get_contract()
-
-    """
-    def call(self, address: str, abi, func: str, param, chain_link):
-        caller = Caller(contract_address=address, abi=abi, chain_link=chain_link)
-        try:
-            tx_receipt = caller.signTransaction(func, *param)
-            return tx_receipt
-        except TypeError as e:
-            try:
-                tx_receipt = caller.call(func, param)
-                return tx_receipt
-            except Exception:
-                print("Something went wrong :(")
-    """
 
     def deploySC(self, path_file: str, addressGiven):
         try:
@@ -123,6 +111,14 @@ class OnChain():
 
     def getDeployMap(self):
         try:
-            print(self.manager.contract.functions.getDeployMap().call())
+            pt = PrettyTable()
+            pt.field_names = ["Id Shard", "Url Shard", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
+            map = self.manager.contract.functions.getDeployMap().call()
+            for sc in map:
+                x = list(sc)
+                #x[2] = x[2].decode("utf-8", "ignore")
+                x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
+                pt.add_row(x)
+            print(pt)
         except Exception as e:
             raise Exception("Could not get contract list...")
