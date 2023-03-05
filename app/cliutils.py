@@ -1,5 +1,5 @@
 from Log import Logger
-
+from prettytable import PrettyTable
 
 def sign():
     # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
@@ -48,33 +48,51 @@ def signWithAdress(address):
         exit(1)
 
 
-def show_methods(abi):
-    k = 0
+def show_methods(methods):
+    pt = PrettyTable()
+    pt.field_names = ["Method Id", "Method Sign", "Output", "Type"]
+    for m in methods:
+        pt.add_row(m[:-1])
+    print(pt)
+
+def get_methods(abi):
+    count = 0
+    true_count = 0    
+    x_list = []
     for c in abi:
         if c.get("type") == "function":
-            print("METHOD " + k.__str__() + ": " + c["name"] + " <=> TYPE: " + c["stateMutability"])
-            k += 1
-            message = "INPUTS: "
+            type = c["stateMutability"]
+            method_sign = c["name"] + "( "
             for i in range(len(c["inputs"])):
-                message += (c["inputs"][i]["name"] if (c["inputs"][i]["name"] != "") else "_") + " : " + c["inputs"][i][
-                    "type"] + " - "
-            print(message)
-            message = "OUTPUTS: "
+                method_sign += (c["inputs"][i]["name"] if (c["inputs"][i]["name"] != "") else "_") + " : " + c["inputs"][i][
+                    "type"] + ", "
+            method_sign += ")"
+            method_sign = method_sign.replace(", )",  ")")
+            output = ""
             for j in range(len(c["outputs"])):
-                message += c["outputs"][j]["type"] + " - "
-            print(message)
-            print("       -----------")
+                output += c["outputs"][j]["type"] + ", "
+            output += " "
+            output = output.replace(",  ", "")
+            x_list.append([count, method_sign, output, type, true_count])
+            count += 1
+        true_count += 1
+    
+    return x_list
 
-
-def select_method(abi):
-    method_i = input("Which method do you wish to call? ")
-    while not (method_i.isdigit() and (int(method_i) in range(len(abi)))):
-        print("You were supposed to select by id...")
-        method_i = input("Which method do you wish to call? ")
-    c = abi[int(method_i)]
-    print("Method" + method_i + ": " + c["name"])
-    return method_i
-
+def select_method(methods):
+    while True:
+        try:
+            index = int(input("Which method do you wish to call? "))
+            if index < 0:
+                raise IndexError
+            return methods[index][-1]
+        except ValueError:
+            print("Invalid index selected")
+        except IndexError as e:
+            print("Index out of range")
+        except Exception as e:
+            print(e.__class__)
+            print(e)
 
 def insert_args(inputs):
     while True:
@@ -83,16 +101,18 @@ def insert_args(inputs):
             flag = True
             input_type = int if inputs[i]["type"].__contains__("int") else \
                 bool if inputs[i]["type"].__contains__("bool") else str
-            #   if inputs[i]["type"].__contains__("string")...
             while flag:
-                a = input(
-                    (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"]
-                )
                 try:
-                    input_type(a)
+                    a = input(
+                        (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"]
+                    )
+                    a = input_type(a)
+                    flag = False
                 except ValueError:
-                    continue
-                flag = False
+                    print("Invalid argument type")
+                except Exception as e:
+                    print(e.__class__)
+                    print(e)
             args += (a,)
         try:
             return args
@@ -101,11 +121,17 @@ def insert_args(inputs):
 
 
 def get_contract(deploy_map):
-    for i in range(len(deploy_map)):
-        print(str(i) + ") - " + deploy_map[i][3] + " - shard : " + str(deploy_map[i][0]))
     while True:
-        index = int(input("Insert a valid index for a contract: "))
         try:
+            index = int(input("Insert a valid index for a contract: "))
+            if index < 0:
+                raise IndexError
             return deploy_map[index][1], deploy_map[index][2]
         except ValueError:
             print("Invalid index selected")
+        except IndexError as e:
+            print("Index out of range")
+        except Exception as e:
+            print(e.__class__)
+            print(e)
+

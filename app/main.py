@@ -12,7 +12,7 @@ from Log import Logger
 from call import Caller
 
 
-from cliutils import show_methods, select_method, get_contract, signWithAdress
+from cliutils import show_methods, select_method, get_contract, signWithAdress, get_methods
 
 from consolemenu import *
 from consolemenu.items import *
@@ -110,7 +110,9 @@ def register():
 
 def call(my_address):
     try:
-        chain_link, contract_address = get_contract(OnChain().getDeployMap())
+        map = OnChain().getDeployMap()
+        OnChain().showDeployMap(map)
+        chain_link, contract_address = get_contract(map)
     except Exception as e:
         print(e.args)
         print("Exiting...")
@@ -129,10 +131,11 @@ def call(my_address):
             print("File is not a JSON")
     try:
         caller = Caller(chain_link=chain_link, contract_address=contract_address, abi=abi)
-        show_methods(abi=caller.get_abi())
+        methods = get_methods(abi)
+        show_methods(methods)
         go_on = True
         while go_on:
-            res = caller.method_call(select_method(abi), my_address)
+            res = caller.method_call(select_method(methods), my_address)
             if isinstance(res, AttributeDict) and "status" in res.keys():
                 if res.status == 1:
                     print("Transaction has been correctly sent")

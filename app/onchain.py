@@ -5,8 +5,8 @@ from pathlib import Path
 
 from web3 import Web3
 
-from app.call import Caller
-from app.cliutils import signWithAdress
+from call import Caller
+from cliutils import signWithAdress
 from compiler import compile, deploy
 from prettytable import PrettyTable
 from datetime import datetime
@@ -92,7 +92,7 @@ class OnChain():
             receipt = self.manager.signTransaction(
                 self.manager.contract.functions.reserveDeploy,
                 my_address,
-                (id_alg)
+                (id_alg, )
             )
             event = self.manager.contract.events.ChangedAlgorithm().processReceipt(receipt)
             print("Sharding algorithm changed to: " + str(event[0].args["newAlg"]))
@@ -111,16 +111,12 @@ class OnChain():
             # print(e)
             raise SystemExit(1)
 
-    def showDeployMap(self):
+    def showDeployMap(self, map):
         try:
             pt = PrettyTable()
-            pt.field_names = ["Id Shard", "Url Shard", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
-            map = self.manager.contract.functions.getDeployMap().call()
+            pt.field_names = ["Shard Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
             for sc in map:
-                x = list(sc)
-                x[2] = Web3.toChecksumAddress(x[2].hex())
-                x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
-                pt.add_row(x)
+                pt.add_row(sc)
             print(pt)
         except Exception as e:
             raise Exception("Could not get contract list...")
