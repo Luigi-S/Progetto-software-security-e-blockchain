@@ -10,7 +10,7 @@ class Logger:
             self._address = address
         else:
             raise Exception("Invalid address")
-        self._map = dotenv_values(".env", verbose=False)
+        self._map = dotenv_values("pwd.env", verbose=False)
 
     def getAddress(self):
         return self._address
@@ -30,10 +30,10 @@ class Logger:
                 txt = ""
                 for k in self._map.keys():
                     txt += f"{k}={self._map[k]}\n"
-                with open(".env", "w") as f:
+                with open("pwd.env", "w") as f:
                     f.write(txt)
             else:
-                with open(".env", "a") as f:
+                with open("pwd.env", "a") as f:
                     f.write(f"{self._address}={encrypted}\n")
         except IOError:
             raise Exception("Could not store account")
