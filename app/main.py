@@ -122,7 +122,7 @@ def register():
 def call(my_address):
     try:
         map = OnChain().getDeployMap()
-        OnChain().showDeployMap(map)
+        OnChain().showDeployMap()
         chain_link, contract_address = get_contract(map)
     except Exception as e:
         print(e.args)
@@ -171,9 +171,10 @@ def callMenu(address):
         print(e.args)
         print("Error on call (general)...")
         input("Press enter to continue")
+
 def getMapMenu ():
     on_chain = OnChain()
-    on_chain.showDeployMap(on_chain.getDeployMap())
+    on_chain.showDeployMap()
     input("Press enter to continue")
 
 if __name__ == "__main__":
