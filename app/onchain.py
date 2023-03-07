@@ -131,6 +131,6 @@ class OnChain():
         for sc in map:
             x = list(sc)
             x[2] = Web3.toChecksumAddress(x[2].hex())
-            x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
+            x[5] = datetime.fromtimestamp(x[5]).strftime("%d/%m/%Y, %H:%M:%S")
             x_list.append(x)
         return x_list

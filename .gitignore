@@ -9,3 +9,4 @@ artifacts
 /py_backend/.env
 app/.env
 app/app/compiled_contracts/Contratto.json
+pwd.env
