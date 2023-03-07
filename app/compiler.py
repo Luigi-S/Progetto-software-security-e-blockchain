@@ -66,7 +66,6 @@ def compile(contract_path):
 
 def deploy(bytecode, abi, address, key, url_shard):
     try:
-        url_shard = url_shard.replace("ganaches", "127.0.0.1")
         w3 = ConnectionHost(url_shard).connect()
         # Create the contract in Python
         contract = w3.eth.contract(abi=abi, bytecode=bytecode)

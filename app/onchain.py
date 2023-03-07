@@ -43,7 +43,7 @@ class OnChain():
             if not target.exists():
                 print("The target directory doesn't exist.\n")
                 print("Tip: if you tried to insert a file name, you have to specify the correct format.")
-                raise SystemExit(1)
+                #raise SystemExit(1)
             elif not target.is_dir():
                 if target.suffix == ".sol":
                     bytecode, abi = compile(path_file)
@@ -62,15 +62,18 @@ class OnChain():
                                key=signWithAdress(addressGiven))
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
-                    raise SystemExit(1)
+                    #raise SystemExit(1)
 
             else:
                 print("Non valid input: impossible to find a deployable contract.")
-                raise SystemExit(1)
+                #raise SystemExit(1)
 
+        except TypeError:
+            print("The used account has a private key that doesn't correspond to the public key")
         except Exception as e:
+            print(e.__class__)
             print(e)
-            raise SystemExit(1)
+            #raise SystemExit(1)
 
     # def findSC(self):
     # Verifica se lo SC è deployato in qualche shard e in tale caso chiama deleteSC() passando indirizzo SC e url_shard
@@ -111,7 +114,8 @@ class OnChain():
             # print(e)
             raise SystemExit(1)
 
-    def showDeployMap(self, map):
+    def showDeployMap(self):
+        map = self.getDeployMap()
         try:
             pt = PrettyTable()
             pt.field_names = ["Shard Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
