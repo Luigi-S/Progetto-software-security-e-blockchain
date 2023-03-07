@@ -1,5 +1,3 @@
-import socket
-
 from web3.exceptions import InvalidAddress
 
 from ConnectionHost import ConnectionHost
@@ -53,12 +51,9 @@ class Caller:
         except TypeError:
             print("The params inserted aren't the same required by the function called.")
             exit(1)
-        except socket.gaierror:
-            print("System error occurred with socket.")
         except Exception as e:
             print(e)
-            print(e.__class__)
-            print("ERROR: System error occurred.")
+            print("System error occurred.")
             exit(1)
 
     def signTransaction(self, func, my_address, args=()):

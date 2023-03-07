@@ -15,9 +15,8 @@ class Checker():
 
         for port in range(base_port, top_port):
             url = "ws://ganaches:" + str(port)
-            rev_url = url.replace("ganaches", "127.0.0.1")
-            self.w3Shard[rev_url] = ConnectionHost(url).connect()
-            self.filters[rev_url] = self.w3Shard[rev_url].eth.filter('latest')
+            self.w3Shard[url] = ConnectionHost(url).connect()
+            self.filters[url] = self.w3Shard[url].eth.filter('latest')
         
     async def event_loop(self, deploy_filter):
         while True:

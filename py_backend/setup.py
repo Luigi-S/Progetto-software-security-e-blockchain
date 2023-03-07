@@ -59,7 +59,7 @@ def main():
             manager_caller.call("setOracle", oracle_address)
 
             for port in range(BASE_PORT, BASE_PORT + PORTS):
-                url = "ws://127.0.0.1:" + str(port)
+                url = "ws://ganaches:" + str(port)
                 manager_caller.call("addShard", url, True)
             
             with open(".env", "w") as file:
