@@ -54,7 +54,7 @@ def signWithAdress(address):
 
 def show_methods(methods):
     pt = PrettyTable()
-    pt.field_names = ["Method Id", "Method Sign", "Output", "Type"]
+    pt.field_names = ["Id", "Method Sign", "Output", "Type"]
     for m in methods:
         pt.add_row(m[:-1])
     print(pt)

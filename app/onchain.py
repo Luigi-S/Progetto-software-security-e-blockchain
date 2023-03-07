@@ -20,14 +20,14 @@ class OnChain():
 
     def __init__(self):
         try:
-            load_dotenv("./py_backend/.env")
+            load_dotenv(os.path.realpath(os.path.dirname(__file__)) + "/../py_backend/.env")
             self.manager_address = os.environ.get("MANAGER_ADDRESS")
         except:
             print("SYSTEM ERROR: Impossible to find file ./py_backend/.env")
             raise SystemExit(1)
 
         try:
-            with open("./py_backend/abi/Manager.json", "r") as f:
+            with open(os.path.realpath(os.path.dirname(__file__)) + "/../py_backend/abi/Manager.json", "r") as f:
                 self.manager_abi = f.read().__str__()
                 self.manager_abi.replace("\"", "\\\"")
         except:
@@ -43,7 +43,7 @@ class OnChain():
             if not target.exists():
                 print("The target directory doesn't exist.\n")
                 print("Tip: if you tried to insert a file name, you have to specify the correct format.")
-                raise SystemExit(1)
+                #raise SystemExit(1)
             elif not target.is_dir():
                 if target.suffix == ".sol":
                     bytecode, abi = compile(path_file)
@@ -62,15 +62,18 @@ class OnChain():
                                key=signWithAdress(addressGiven))
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
-                    raise SystemExit(1)
+                    #raise SystemExit(1)
 
             else:
                 print("Non valid input: impossible to find a deployable contract.")
-                raise SystemExit(1)
+                #raise SystemExit(1)
 
+        except TypeError:
+            print("The used account has a private key that doesn't correspond to the public key")
         except Exception as e:
+            print(e.__class__)
             print(e)
-            raise SystemExit(1)
+            #raise SystemExit(1)
 
     # def findSC(self):
     # Verifica se lo SC è deployato in qualche shard e in tale caso chiama deleteSC() passando indirizzo SC e url_shard
@@ -111,10 +114,11 @@ class OnChain():
             # print(e)
             raise SystemExit(1)
 
-    def showDeployMap(self, map):
+    def showDeployMap(self):
+        map = self.getDeployMap()
         try:
             pt = PrettyTable()
-            pt.field_names = ["Shard Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
+            pt.field_names = ["Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
             for sc in map:
                 pt.add_row(sc)
             print(pt)
@@ -124,9 +128,10 @@ class OnChain():
     def getDeployMap(self):
         map = self.manager.contract.functions.getDeployMap().call()
         x_list = []
-        for sc in map:
+        for i, sc in enumerate(map):
             x = list(sc)
+            x[0] = i
             x[2] = Web3.toChecksumAddress(x[2].hex())
-            x[5] = datetime.fromtimestamp(x[5]).strftime("%m/%d/%Y, %H:%M:%S")
+            x[5] = datetime.fromtimestamp(x[5]).strftime("%d/%m/%Y, %H:%M:%S")
             x_list.append(x)
         return x_list
