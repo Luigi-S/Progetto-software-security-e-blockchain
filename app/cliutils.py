@@ -1,5 +1,6 @@
 from Log import Logger
 from prettytable import PrettyTable
+import  getpass
 
 def sign():
     # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
@@ -16,7 +17,7 @@ def sign():
                     print(e.args[0])
         while True:
             try:
-                key = logger.getKey(passwd=input("Password for " + str(logger.getAddress()) + " "))
+                key = logger.getKey(passwd=getpass.getpass(prompt="Password for " + str(logger.getAddress()) + " "))
                 return logger.getAddress(), key
             except Exception as e:
                 print("Wrong password")
@@ -35,7 +36,10 @@ def signWithAdress(address):
         while True:
             try:
                 logger = Logger(address)
-                key = logger.getKey(passwd=input("Password for " + str(logger.getAddress()) + " "))
+                password = getpass.getpass(prompt="Password for " + str(logger.getAddress()) + "(insert \"e\" to exit): ")
+                if password == "e" or password == "E":
+                    raise KeyboardInterrupt
+                key = logger.getKey(passwd=password)
                 return key
             except Exception as e:
                 print("Wrong password")
