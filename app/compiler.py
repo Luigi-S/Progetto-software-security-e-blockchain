@@ -34,7 +34,7 @@ def compile(contract_path):
 
         # Crea il file.json di ogni contratto deployato contenente l'abi di esso
         for contract in compiled_sol["contracts"][contract_name]:
-            with open("app/compiled_contracts/" + contract + ".json", "w") as file:
+            with open(os.path.realpath(os.path.dirname(__file__)) + "/compiled_contracts/" + contract + ".json", "w") as file:
                 json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
         # many contracts can be in a single .sol file

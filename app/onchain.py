@@ -20,14 +20,14 @@ class OnChain():
 
     def __init__(self):
         try:
-            load_dotenv("./py_backend/.env")
+            load_dotenv(os.path.realpath(os.path.dirname(__file__)) + "/../py_backend/.env")
             self.manager_address = os.environ.get("MANAGER_ADDRESS")
         except:
             print("SYSTEM ERROR: Impossible to find file ./py_backend/.env")
             raise SystemExit(1)
 
         try:
-            with open("./py_backend/abi/Manager.json", "r") as f:
+            with open(os.path.realpath(os.path.dirname(__file__)) + "/../py_backend/abi/Manager.json", "r") as f:
                 self.manager_abi = f.read().__str__()
                 self.manager_abi.replace("\"", "\\\"")
         except:
@@ -118,7 +118,7 @@ class OnChain():
         map = self.getDeployMap()
         try:
             pt = PrettyTable()
-            pt.field_names = ["Shard Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
+            pt.field_names = ["Id", "Shard Url", "Contract Address", "Name", "User Address", "Deploy Time", "Reserved"]
             for sc in map:
                 pt.add_row(sc)
             print(pt)
@@ -128,8 +128,9 @@ class OnChain():
     def getDeployMap(self):
         map = self.manager.contract.functions.getDeployMap().call()
         x_list = []
-        for sc in map:
+        for i, sc in enumerate(map):
             x = list(sc)
+            x[0] = i
             x[2] = Web3.toChecksumAddress(x[2].hex())
             x[5] = datetime.fromtimestamp(x[5]).strftime("%d/%m/%Y, %H:%M:%S")
             x_list.append(x)
