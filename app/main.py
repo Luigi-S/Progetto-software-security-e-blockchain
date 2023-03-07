@@ -81,6 +81,7 @@ def deployMenu(user:str):
     print("Insert path: ")
     path = input()
     on_chain.deploySC(path, user)
+    input("Press enter to continue")
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 def register():
@@ -170,6 +171,7 @@ def callMenu(address):
     except Exception as e:
         print(e.args)
         print("Error on call (general)...")
+    finally:
         input("Press enter to continue")
 
 def getMapMenu ():

@@ -75,6 +75,18 @@ class Caller:
         transaction_hash = self.w3.eth.send_raw_transaction(signed.rawTransaction)
         receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash)
         return receipt
-
+    def signTransactionKey(self, func, my_address, key, args=()):
+        transaction = func(*args).buildTransaction({
+            "chainId": self.w3.eth.chain_id,
+            "gasPrice": self.w3.eth.gas_price,  # stima il costo con una call
+            "from": my_address,
+            "nonce": self.w3.eth.getTransactionCount(my_address),
+        })
+        signed = self.w3.eth.account.sign_transaction(
+            transaction, private_key=key
+        )
+        transaction_hash = self.w3.eth.send_raw_transaction(signed.rawTransaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash)
+        return receipt
 
 

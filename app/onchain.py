@@ -38,6 +38,7 @@ class OnChain():
                               chain_link=self.manager_shard)  # .get_contract()
 
     def deploySC(self, path_file: str, addressGiven):
+        private_key = signWithAdress(addressGiven)
         try:
             target = Path(path_file)
             if not target.exists():
@@ -49,9 +50,10 @@ class OnChain():
                     bytecode, abi = compile(path_file)
 
                     for elem in bytecode:
-                        receipt = self.manager.signTransaction(
+                        receipt = self.manager.signTransactionKey(
                             self.manager.contract.functions.reserveDeploy,
                             addressGiven,
+                            private_key,
                             tuple([elem])
                         )
                         event = self.manager.contract.events.DeployUrl().processReceipt(receipt)
@@ -59,7 +61,7 @@ class OnChain():
                         print("The contract is ready to be deployed to the shard at the url: " + str(url))
 
                         deploy(bytecode=bytecode[elem], abi=abi[elem], url_shard=url, address=addressGiven,
-                               key=signWithAdress(addressGiven))
+                               key=private_key)
                 else:
                     print("Non valid input: impossible to find a deployable contract.")
                     #raise SystemExit(1)
