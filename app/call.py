@@ -38,10 +38,10 @@ class Caller:
             print("The address doesn't exist.")
         except ValueError as e1:
             if isinstance(e1.args[0], dict):
-                print(e1.args[0]['message'])   # not enough funds
+                print(e1.args[0]['name'] + ": " + e1.args[0]['message'])   # not enough funds
                 print("Exiting...")
                 exit(1)
-            elif e1.args[0].find("execution reverted") != -1:
+            if e1.args[0].find("execution reverted") != -1:
                 # se viene catchato un ValueError potrebbe essere perchè il metodo
                 # dello SC non esiste o perchè esiste ma lancia una revert
                 print("ERROR: " + e1.args[0][70:])  # Acquisiamo il messaggio lanciato durante la revert

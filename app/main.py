@@ -80,6 +80,7 @@ def deployMenu(user:str):
     on_chain = OnChain()
     print("Insert path: ")
     path = input()
+    path = path.lower()
     on_chain.deploySC(path, user)
     input("Press enter to continue")
 
@@ -126,7 +127,8 @@ def call(my_address):
         OnChain().showDeployMap()
         chain_link, contract_address = get_contract(map)
     except Exception as e:
-        print(e.args)
+        print(e.__class__)
+        print(e)
         print("Exiting...")
     flag = True
     while flag:
@@ -162,7 +164,8 @@ def call(my_address):
             if confirm.strip().lower() == 'v':
                 go_on = False
     except Exception as e:
-        print(e.args[0])
+        print(e.__class__)
+        print(e)
         print("Exiting...")
 
 def callMenu(address):

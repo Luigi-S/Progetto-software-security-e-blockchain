@@ -1,6 +1,8 @@
 import binascii
+import calendar
 import json
 import os
+import time
 
 import solcx
 from solcx.exceptions import SolcError
@@ -9,6 +11,7 @@ from solcx import compile_standard
 
 from ConnectionHost import ConnectionHost
 
+ABI_FOLDER = "abi"
 
 def compile(contract_path):
     try:
@@ -29,12 +32,14 @@ def compile(contract_path):
             },
         )
 
-        if not os.path.exists("app/compiled_contracts"):
-            os.makedirs("app/compiled_contracts")
+        if not os.path.exists("app/" + ABI_FOLDER):
+            os.makedirs("app/" + ABI_FOLDER)
 
         # Crea il file.json di ogni contratto deployato contenente l'abi di esso
         for contract in compiled_sol["contracts"][contract_name]:
-            with open(os.path.realpath(os.path.dirname(__file__)) + "/compiled_contracts/" + contract + ".json", "w") as file:
+            gmt = time.gmtime()
+            ts = calendar.timegm(gmt)
+            with open(os.path.realpath(os.path.dirname(__file__)) + "/" + ABI_FOLDER + "/" + str(contract).lower() + ts.__str__() + ".json", "w") as file:
                 json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
         # many contracts can be in a single .sol file
