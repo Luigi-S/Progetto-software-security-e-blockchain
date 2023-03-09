@@ -1,20 +1,12 @@
 import json
 import re
-
 import getpass
-
-import consolemenu
 from click import Abort
 from web3.datastructures import AttributeDict
-
 from onchain import OnChain
 from Log import Logger
-
 from call import Caller
-
-
 from cliutils import show_methods, select_method, get_contract, signWithAdress, get_methods
-
 from consolemenu import *
 from consolemenu.items import *
 
@@ -30,8 +22,6 @@ title = """
      \$$$$$$$        \$$$$$$$ 
         --BLOCK BALANCER--
 """
-#app = typer.Typer()
-
 def login():
     flag = True
     while flag:
@@ -52,33 +42,37 @@ def login():
                 print(e.args[0])
     try:
         signWithAdress(address)
-        title = "welcome " + address
-        print(address)
-        subMenu = ConsoleMenu(title, "Seleziona una funzione", exit_option_text = "Logout")
+        title = "User " + address
 
-        on_chain = OnChain()
+        loginMenu = ConsoleMenu(title, "Select a function ", exit_option_text="Logout")
 
-        # A FunctionItem runs a Python function when selected
-        #deployItem = FunctionItem("Deploy", deploy)
+
         deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(address)], should_exit=False)
         getMap = FunctionItem("Get Deploy Map", function=getMapMenu, should_exit=False)
         callItem = FunctionItem("Call", function=callMenu, args=[str(address)], should_exit=False)
 
-        shardingAlgItem = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)], should_exit=False)
+        # Menu Admin
+        adminMenu = ConsoleMenu("Admin functions")
+        shardingAlgItem = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)],
+                                       should_exit=False)
         shardStatusItem = FunctionItem("Set Shard Status", function=setShardStatus, args=[str(address)],
                                        should_exit=False)
+        adminMenu.append_item(shardingAlgItem)
+        adminMenu.append_item(shardStatusItem)
+        adminMenu_item = SubmenuItem("Admin Submenu", submenu=adminMenu)
+        adminMenu_item.set_menu(loginMenu)
+
         # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
         # DEPLOY (FILE SOL)
 
         # Once we're done creating them, we just add the items to the menu
-        subMenu.append_item(deployItem)
-        subMenu.append_item(getMap)
-        subMenu.append_item(callItem)
-        subMenu.append_item(shardingAlgItem)
-        subMenu.append_item(shardStatusItem)
+        loginMenu.append_item(deployItem)
+        loginMenu.append_item(getMap)
+        loginMenu.append_item(callItem)
+        loginMenu.append_item(adminMenu_item)
 
     # Finally, we call show to show the menu and allow the user to interact
-        subMenu.show()
+        loginMenu.show()
     except KeyboardInterrupt as e:
         print("Login failed")
 
@@ -108,7 +102,7 @@ def register():
             print("Error: Weak password \n"
                        " Minimum eight characters, at least one letter, one number and one special character")
             password = str(getpass.getpass("Insert your password (minimum eight characters, at least one letter, one number and one special character) "))
-        private_key = str(input("Insert your private key (starting with 0x and 64 characters long) "))
+        private_key = str(getpass.getpass("Insert your private key (starting with 0x and 64 characters long) "))
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
             print("Error: Private key is not valid")
             private_key = str(input("Private key: "))
@@ -122,8 +116,8 @@ def register():
     except Exception as e:
         print("Something went wrong")  # TODO distinguere le casistiche
         print(e.args)
-        # typer.echo(e.with_traceback()) # - developement
-        exit(1)
+    finally:
+        input("Press enter to continue")
 
 
 def call(my_address):
@@ -189,17 +183,37 @@ def getMapMenu():
 
 def changeShardingAlg(address):
     on_chain = OnChain()
-    print("Insert sharding algorithm id: ")
-    id_alg = input()  # Fare in modo che si acquisisca solo un intero
+    flag = True
+    while flag:
+        try:
+            print("Insert sharding algorithm id: ")
+            id_alg = int(input())
+            flag = False
+        except ValueError:
+            print("Error: Insert a valid integer")
     on_chain.setShardingAlgorithm(int(id_alg), address)
     input("Press enter to continue")
 
 def setShardStatus(address):
     on_chain = OnChain()
-    print("Insert shard id: ")
-    id_shard = input()  # Fare in modo che si acquisisca solo un intero
-    print("Insert shard status (0 = False; 1 = True): ")
-    status = input()  # Fare in modo che si acquisisca solo 0 o 1
+    flag = True
+    while flag:
+        try:
+            print("Insert shard id: ")
+            id_shard = int(input())
+            flag = False
+        except ValueError:
+            print("Error: Insert a valid integer")
+    flag = True
+    while flag:
+        try:
+            print("Insert shard status (0 for false, 1 for true): ")
+            status = int(input())  # Fare in modo che si acquisisca solo 0 o 1
+            if status != 0 and status != 1:
+                raise Exception("Error: Insert a valid value")
+            flag = False
+        except Exception as e:
+            print(e)
     on_chain.setShardStatus(int(id_shard), bool(status), address)
     input("Press enter to continue")
 
@@ -211,19 +225,9 @@ if __name__ == "__main__":
     registrazione = FunctionItem("Register", register)
     login = FunctionItem("Login", login)
 
-    #submenu = SelectionMenu(["item1", "item2", "item3"], title="Selection Menu", subtitle="These menu items return to the previous menu")
-
-    # Create the menu item that opens the Selection submenu
-    #submenu_item = SubmenuItem("Submenu item", submenu=submenu)
-    #submenu_item.set_menu(menu)
-    #UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
-    #DEPLOY (FILE SOL)
-
-
     # Once we're done creating them, we just add the items to the menu
     menu.append_item(registrazione)
     menu.append_item(login)
-    #menu.append_item(submenu_item)
 
     # Finally, we call show to show the menu and allow the user to interact
     menu.show()

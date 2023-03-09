@@ -9,4 +9,5 @@ artifacts
 /py_backend/.env
 app/.env
 app/app/compiled_contracts/Contratto.json
+app/abi
 pwd.env
