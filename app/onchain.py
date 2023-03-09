@@ -122,6 +122,7 @@ class OnChain():
                 my_address,
                 (shard_id, status)
             )
+            print("Shard n. " + shard_id.__str__() + " has now the status \"" + status.__str__() + "\"")
         except ValidationError:
             print("The method called hasn't been found or the type of parameters wasn't correct.")
         except ContractLogicError as e1:
