@@ -65,7 +65,7 @@ def login():
         callItem = FunctionItem("Call", function=callMenu, args=[str(address)], should_exit=False)
 
         shardingAlgItem = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)], should_exit=False)
-        shardStatusItem = FunctionItem("Set Shard Status", function=changeShardStatus, args=[str(address)],
+        shardStatusItem = FunctionItem("Set Shard Status", function=setShardStatus, args=[str(address)],
                                        should_exit=False)
         # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
         # DEPLOY (FILE SOL)
@@ -75,6 +75,7 @@ def login():
         subMenu.append_item(getMap)
         subMenu.append_item(callItem)
         subMenu.append_item(shardingAlgItem)
+        subMenu.append_item(shardStatusItem)
 
     # Finally, we call show to show the menu and allow the user to interact
         subMenu.show()
