@@ -1,10 +1,12 @@
 import os
 import warnings
 
+import web3
 from dotenv import load_dotenv
 from pathlib import Path
 
 from web3 import Web3
+from web3.exceptions import ValidationError, ContractLogicError
 
 from call import Caller
 from cliutils import signWithAdress
@@ -81,7 +83,7 @@ class OnChain():
 
     # def findSC(self):
     # Verifica se lo SC è deployato in qualche shard e in tale caso chiama deleteSC() passando indirizzo SC e url_shard
-
+    '''
     def deleteSC(self, abi, address, url_shard, my_address):
         try:
             caller = Caller(contract_address=address, abi=abi, chain_link=url_shard)
@@ -93,18 +95,24 @@ class OnChain():
         except Exception as e:
             print(e)
             raise SystemExit(1)
+    '''
 
     def setShardingAlgorithm(self, id_alg: int, my_address):
         try:
             receipt = self.manager.signTransaction(
-                self.manager.contract.functions.reserveDeploy,
+                self.manager.contract.functions.setAlg,
                 my_address,
-                (id_alg,)
+                tuple([id_alg])
             )
             event = self.manager.contract.events.ChangedAlgorithm().processReceipt(receipt)
             print("Sharding algorithm changed to: " + str(event[0].args["newAlg"]))
+        except ValidationError:
+            print("The method called hasn't been found or the type of parameters wasn't correct.")
+        except ContractLogicError:
+            print("CONTROLLARE FRASE DA STAMPARE")
         except Exception as e:
-            # print(e)
+            print(e.__class__)
+            print(e)
             raise SystemExit(1)
 
     def setShardStatus(self, shard_id: int, status: bool, my_address):

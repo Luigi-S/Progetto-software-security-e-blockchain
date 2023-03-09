@@ -39,7 +39,7 @@ def compile(contract_path):
         for contract in compiled_sol["contracts"][contract_name]:
             gmt = time.gmtime()
             ts = calendar.timegm(gmt)
-            with open(os.path.realpath(os.path.dirname(__file__)) + "/" + ABI_FOLDER + "/" + str(contract).lower() + ts.__str__() + ".json", "w") as file:
+            with open(os.path.realpath(os.path.dirname(__file__)) + "/" + ABI_FOLDER + "/" + contract + ts.__str__() + ".json", "w") as file:
                 json.dump(compiled_sol["contracts"][contract_name][contract]["abi"], file)
 
         # many contracts can be in a single .sol file

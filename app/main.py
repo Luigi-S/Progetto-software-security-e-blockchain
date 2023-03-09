@@ -63,6 +63,8 @@ def login():
         deployItem = FunctionItem("Deploy",function=deployMenu, args=[str(address)], should_exit=False)
         getMap = FunctionItem("Get Deploy Map", function=getMapMenu, should_exit=False)
         callItem = FunctionItem("Call", function=callMenu, args=[str(address)], should_exit=False)
+
+        shardingAlgItem = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)], should_exit=False)
         # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
         # DEPLOY (FILE SOL)
 
@@ -70,6 +72,7 @@ def login():
         subMenu.append_item(deployItem)
         subMenu.append_item(getMap)
         subMenu.append_item(callItem)
+        subMenu.append_item(shardingAlgItem)
 
     # Finally, we call show to show the menu and allow the user to interact
         subMenu.show()
@@ -80,7 +83,6 @@ def deployMenu(user:str):
     on_chain = OnChain()
     print("Insert path: ")
     path = input()
-    path = path.lower()
     on_chain.deploySC(path, user)
     input("Press enter to continue")
 
@@ -177,9 +179,16 @@ def callMenu(address):
     finally:
         input("Press enter to continue")
 
-def getMapMenu ():
+def getMapMenu():
     on_chain = OnChain()
     on_chain.showDeployMap()
+    input("Press enter to continue")
+
+def changeShardingAlg(address):
+    on_chain = OnChain()
+    print("Insert sharding algorithm id: ")
+    id_alg = input()
+    on_chain.setShardingAlgorithm(int(id_alg), address)
     input("Press enter to continue")
 
 if __name__ == "__main__":
