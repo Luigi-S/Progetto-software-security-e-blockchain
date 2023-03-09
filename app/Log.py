@@ -1,11 +1,15 @@
 import re
 import os
+import codecs
+
 from dotenv import dotenv_values
 from eth_account import Account
 from ast import literal_eval
-
+from web3 import Web3
+from eth_keys import keys
 
 class Logger:
+
     def __init__(self, address):
         self.penv_path = os.path.realpath(os.path.dirname(__file__)) + "/../pwd.env"
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is not None:
@@ -24,20 +28,32 @@ class Logger:
         except KeyError:
             raise Exception("Address not registered on this device")
 
+    def address_matches_key(self, key):
+        decoder = codecs.getdecoder("hex_codec")
+        privk = key.removeprefix("0x")
+        private_key_bytes = decoder(privk)[0]
+        pk = keys.PrivateKey(private_key_bytes).public_key
+        hash = Web3.sha3(hexstr=str(pk))
+        calc_address = Web3.toChecksumAddress(Web3.toHex(hash[-20:]))
+        return calc_address == self._address
+            
     def register(self, key, passwd):
         try:
-            encrypted = Account.encrypt(key, passwd)
-            if self._address in self._map.keys():
-                self._map[self._address] = encrypted
-                txt = ""
-                for k in self._map.keys():
-                    txt += f"{k}={self._map[k]}\n"
-                with open(self.penv_path, "w") as f:
-                    f.write(txt)
+            if self.address_matches_key(key):
+                encrypted = Account.encrypt(key, passwd)
+                if self._address in self._map.keys():
+                    self._map[self._address] = encrypted
+                    txt = ""
+                    for k in self._map.keys():
+                        txt += f"{k}={self._map[k]}\n"
+                    with open(self.penv_path, "w") as f:
+                        f.write(txt)
+                else:
+                    with open(self.penv_path, "a") as f:
+                        f.write(f"{self._address}={encrypted}\n")
             else:
-                with open(self.penv_path, "a") as f:
-                    f.write(f"{self._address}={encrypted}\n")
+                raise Exception("Address does not match private key")
         except IOError:
-            raise Exception("Could not store account")
+            print("I/O error")
         except Exception as e:
-            raise Exception("Registation failed", e.args)
+            raise Exception("Registration failed", e.args)

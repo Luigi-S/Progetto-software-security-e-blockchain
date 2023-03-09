@@ -1,6 +1,6 @@
+from time import sleep
 import websockets
 from web3 import Web3
-from time import sleep
 
 class ConnectionHost:
 
@@ -12,17 +12,16 @@ class ConnectionHost:
         self.chain_link = chain_link
 
     def connect(self):
-        
+        web3 = None
         for _ in range(self.ATTEMPTS):
             try:
                 web3 = Web3(Web3.WebsocketProvider(self.chain_link))
-            except TimeoutError as e1:
-                print("ERROR - timeout error:")
-                print(e1)
-            except websockets.exceptions.InvalidURI as e2:
-                print("ERROR - invalid URI:")
-                print(e2)
+            except TimeoutError:
+                print("Timeout error")
+            except websockets.exceptions.InvalidURI:
+                print("Invalid URI")
             if web3.isConnected():
-                print("WebSocket connected at url {} !".format(self.chain_link))
-                return web3
+                print(f"WebSocket connected at url {self.chain_link} !")
+                break
             sleep(self.SLEEP)
+        return web3

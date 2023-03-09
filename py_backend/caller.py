@@ -1,4 +1,3 @@
-from web3 import Web3
 from connection_host import ConnectionHost
 
 class Caller():
@@ -20,15 +19,13 @@ class Caller():
                     "gasPrice": self.w3.eth.gas_price,
                     "from": self.d_address,
                     "nonce": self.w3.eth.getTransactionCount(self.d_address),
-                    #"to" : self.contract.address
                 }
             )
             signed_transaction = self.w3.eth.account.sign_transaction(
                 transaction, private_key=self.d_pk
             )
             tx_greeting_hash = self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)                                                            # <-(tqdm)
-            tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
-            #TODO: exception handling di ogni genere
+            _ = self.w3.eth.wait_for_transaction_receipt(tx_greeting_hash)
         except Exception as e:
             print(type(e))
             print(e)

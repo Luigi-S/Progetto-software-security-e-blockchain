@@ -16,6 +16,9 @@ class Deployer():
         self.d_pk = d_pk
 
     def compile(self, contract_path):
+        ret_abi = None
+        ret_bytecode = None
+        
         try:
             contract_name = os.path.basename(contract_path)
            
@@ -48,34 +51,34 @@ class Deployer():
                     compiled_sol["contracts"][contract_name][contract]["metadata"]
                 )["output"]["abi"]
             
-            # provvisorio v
             ret_bytecode = bytecode[list(compiled_sol["contracts"][contract_name].keys())[0]]
             ret_abi = abi[list(compiled_sol["contracts"][contract_name].keys())[0]]
 
             abi_pathname = "abi/" + contract_name.replace(".sol", ".json")
+            
             with open(abi_pathname, "w") as file:
                 json.dump(ret_abi, file)
 
-            return ret_bytecode, ret_abi
-
-        except solcx.exceptions.SolcError as e:
+        except solcx.exceptions.SolcError:
+            print("File .sol isn't syntactically correct.")
+        except binascii.Error:
+            print("File does not contain a valid bytecode.")
+        except UnboundLocalError as e:
+            print(e.__class__)
             print(e)
-            print("ERROR: the file .sol isn't syntactically correct.")
-        except binascii.Error as e1:
-            print("ERROR: the file doesn't contains a valid bytecode.")
-            print(e1)
-        except UnboundLocalError as e2:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-            print("")
-        except TypeError as e3:
-            print(e3)
-        except Exception as e4:
-            print(e4)
-            print("ERROR: system error occurred.")
+        except TypeError as e:
+            print(e.__class__)
+            print(e)
+        except Exception as e:
+            print(e.__class__)
+            print(e)
+        
+        return ret_bytecode, ret_abi
 
     def deploy(self, bytecode, abi):
         try:
             contract = self.w3.eth.contract(abi=abi, bytecode=bytecode)
-            nonce = self.w3.eth.getTransactionCount(self.d_address) # get address from dotenv
+            nonce = self.w3.eth.getTransactionCount(self.d_address)
             transaction = contract.constructor().buildTransaction(
                 {
                     "chainId": self.chain_id,
@@ -84,20 +87,22 @@ class Deployer():
                     "nonce": nonce,
                 }
             )
-            signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key=self.d_pk) # get private key from dotenv
+            signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key=self.d_pk)
             transaction_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
             receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash)
             print(f"Contract deployed to address: {receipt.contractAddress}")
             return receipt.contractAddress
-        except binascii.Error as e:
-            print("ERROR: the file doesn't contains a valid bytecode.")
-        except KeyError as e2:
-            print("ERROR: the file doesn't contains a valid bytecode.")
-            print(e2)
-        except UnboundLocalError:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-            print("")
-        except TypeError as e3:
-            print(e3)
-        except Exception as e4:
-            print(e4)
-            print("ERROR: system error occurred while deploy")
+        except binascii.Error:
+            print("File does not contain a valid bytecode.")
+        except KeyError as e:
+            print(e.__class__)
+            print(e)
+        except UnboundLocalError as e:
+            print(e.__class__)
+            print(e)
+        except TypeError as e:
+            print(e.__class__)
+            print(e)
+        except Exception as e:
+            print(e.__class__)
+            print(e)
