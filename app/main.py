@@ -65,6 +65,8 @@ def login():
         callItem = FunctionItem("Call", function=callMenu, args=[str(address)], should_exit=False)
 
         shardingAlgItem = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)], should_exit=False)
+        shardStatusItem = FunctionItem("Set Shard Status", function=changeShardStatus, args=[str(address)],
+                                       should_exit=False)
         # UNA VOLTA FATTO IL LOGIN FA SCEGLIERE
         # DEPLOY (FILE SOL)
 
@@ -187,8 +189,17 @@ def getMapMenu():
 def changeShardingAlg(address):
     on_chain = OnChain()
     print("Insert sharding algorithm id: ")
-    id_alg = input()
+    id_alg = input()  # Fare in modo che si acquisisca solo un intero
     on_chain.setShardingAlgorithm(int(id_alg), address)
+    input("Press enter to continue")
+
+def setShardStatus(address):
+    on_chain = OnChain()
+    print("Insert shard id: ")
+    id_shard = input()  # Fare in modo che si acquisisca solo un intero
+    print("Insert shard status (0 = False; 1 = True): ")
+    status = input()  # Fare in modo che si acquisisca solo 0 o 1
+    on_chain.setShardStatus(int(id_shard), bool(status), address)
     input("Press enter to continue")
 
 if __name__ == "__main__":

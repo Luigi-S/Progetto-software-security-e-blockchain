@@ -108,8 +108,8 @@ class OnChain():
             print("Sharding algorithm changed to: " + str(event[0].args["newAlg"]))
         except ValidationError:
             print("The method called hasn't been found or the type of parameters wasn't correct.")
-        except ContractLogicError:
-            print("CONTROLLARE FRASE DA STAMPARE")
+        except ContractLogicError as e1:
+            print("ERROR: " + e1.args[0][70:])  # Acquisiamo il messaggio lanciato durante la revert
         except Exception as e:
             print(e.__class__)
             print(e)
@@ -122,8 +122,13 @@ class OnChain():
                 my_address,
                 (shard_id, status)
             )
+        except ValidationError:
+            print("The method called hasn't been found or the type of parameters wasn't correct.")
+        except ContractLogicError as e1:
+            print("ERROR: " + e1.args[0][70:])  # Acquisiamo il messaggio lanciato durante la revert
         except Exception as e:
-            # print(e)
+            print(e.__class__)
+            print(e)
             raise SystemExit(1)
 
     def showDeployMap(self):
