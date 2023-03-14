@@ -43,7 +43,6 @@ def signWithAdress(address):
                 return key
             except Exception as e:
                 print("Wrong password")
-                print(e)
     except Exception as e:
         # handling da migliorare.
         print("Login failed")

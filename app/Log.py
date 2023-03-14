@@ -8,6 +8,13 @@ from ast import literal_eval
 from web3 import Web3
 from eth_keys import keys
 
+"""Specific exceptions"""
+class InvalidAddress(Exception):
+    pass
+class RegistationFailed(Exception):
+    pass
+
+
 class Logger:
 
     def __init__(self, address):
@@ -15,7 +22,7 @@ class Logger:
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is not None:
             self._address = address
         else:
-            raise Exception("Invalid address")
+            raise InvalidAddress ("Address is not valid")
         self._map = dotenv_values(self.penv_path, verbose=False)
 
     def getAddress(self):
@@ -26,7 +33,7 @@ class Logger:
             x = literal_eval(self._map[self._address])
             return Account.decrypt(x, password=passwd).hex()
         except KeyError:
-            raise Exception("Address not registered on this device")
+            raise RegistationFailed("Address not registered on this device")
 
     def address_matches_key(self, key):
         decoder = codecs.getdecoder("hex_codec")
@@ -52,8 +59,8 @@ class Logger:
                     with open(self.penv_path, "a") as f:
                         f.write(f"{self._address}={encrypted}\n")
             else:
-                raise Exception("Address does not match private key")
+                raise RegistationFailed("Address does not match private key")
         except IOError:
             print("I/O error")
-        except Exception as e:
-            raise Exception("Registration failed", e.args)
+        except Exception as err:
+            raise RegistationFailed from err
