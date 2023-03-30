@@ -77,7 +77,7 @@ def login():
 
 def deploy_menu(user:str):
     """Deploy menu."""
-    print("Insert path: ")
+    print("Insert path (file .sol): ")
     path = input()
     ON_CHAIN.deploySC(path, user)
     input("Press enter to continue")
@@ -102,7 +102,7 @@ def register():
         private_key = str(getpass.getpass("Insert your private key (starting with 0x and 64 characters long) "))
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
             print("Error: Private key is not valid")
-            private_key = str(input("Private key: "))
+            private_key = str(getpass.getpass("Private key: "))
         logger = Logger(address)
         logger.register(private_key, password)
         print("Account registered!")
