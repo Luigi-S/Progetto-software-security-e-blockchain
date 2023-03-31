@@ -11,7 +11,7 @@ from eth_keys import keys
 """Specific exceptions"""
 class InvalidAddress(Exception):
     pass
-class RegistationFailed(Exception):
+class RegistrationFailed(Exception):
     pass
 
 
@@ -22,7 +22,7 @@ class Logger:
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is not None:
             self._address = address
         else:
-            raise InvalidAddress ("Address is not valid")
+            raise InvalidAddress("Address is not valid")
         self._map = dotenv_values(self.penv_path, verbose=False)
 
     def getAddress(self):
@@ -33,7 +33,10 @@ class Logger:
             x = literal_eval(self._map[self._address])
             return Account.decrypt(x, password=passwd).hex()
         except KeyError:
-            raise RegistationFailed("Address not registered on this device")
+            # possibilmente cambiare, messaggio misleading, nome eccezione anche
+            raise RegistrationFailed("Address not registered on this device")
+        except ValueError:
+            raise RegistrationFailed("Password does not match")
 
     def address_matches_key(self, key):
         decoder = codecs.getdecoder("hex_codec")
@@ -59,8 +62,8 @@ class Logger:
                     with open(self.penv_path, "a") as f:
                         f.write(f"{self._address}={encrypted}\n")
             else:
-                raise RegistationFailed("Address does not match private key")
+                raise RegistrationFailed("Address does not match private key")
         except IOError:
             print("I/O error")
         except Exception as err:
-            raise RegistationFailed from err
+            raise RegistrationFailed from err

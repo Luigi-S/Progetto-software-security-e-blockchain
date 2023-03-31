@@ -5,7 +5,7 @@ import getpass
 from click import Abort
 from web3.datastructures import AttributeDict
 from onchain import OnChain, DeployMapError
-from Log import Logger, RegistationFailed, InvalidAddress
+from Log import Logger, RegistrationFailed, InvalidAddress
 from call import Caller
 from cliutils import show_methods, select_method, get_contract, signWithAdress, get_methods
 from consolemenu import ConsoleMenu
@@ -84,7 +84,6 @@ def deploy_menu(user:str):
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 def register():
-    # TODO dettagliare meglio le richieste su password alla fine
     print("Registering an account")
     try:
         address = str(input("Insert your address (starting with 0x and 40 characters long) "))
@@ -110,8 +109,9 @@ def register():
         print("Closing...")
         # TODO valutare su quali azioni fare rollback
         print("Hello")
-    except RegistationFailed:
+    except RegistrationFailed as e:
         print("Registration failed")
+        print(e.args)
     finally:
         input("Press enter to continue")
 
