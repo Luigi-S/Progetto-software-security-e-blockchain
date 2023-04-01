@@ -5,7 +5,7 @@ import getpass
 from click import Abort
 from web3.datastructures import AttributeDict
 from onchain import OnChain, DeployMapError
-from Log import Logger, RegistationFailed, InvalidAddress
+from Log import Logger, RegistrationFailed, InvalidAddress
 from call import Caller
 from cliutils import show_methods, select_method, get_contract, signWithAdress, get_methods
 from consolemenu import ConsoleMenu
@@ -77,14 +77,13 @@ def login():
 
 def deploy_menu(user:str):
     """Deploy menu."""
-    print("Insert path: ")
+    print("Insert path (file .sol): ")
     path = input()
     ON_CHAIN.deploySC(path, user)
     input("Press enter to continue")
 
 # funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
 def register():
-    # TODO dettagliare meglio le richieste su password alla fine
     print("Registering an account")
     try:
         address = str(input("Insert your address (starting with 0x and 40 characters long) "))
@@ -102,7 +101,7 @@ def register():
         private_key = str(getpass.getpass("Insert your private key (starting with 0x and 64 characters long) "))
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
             print("Error: Private key is not valid")
-            private_key = str(input("Private key: "))
+            private_key = str(getpass.getpass("Private key: "))
         logger = Logger(address)
         logger.register(private_key, password)
         print("Account registered!")
@@ -110,8 +109,9 @@ def register():
         print("Closing...")
         # TODO valutare su quali azioni fare rollback
         print("Hello")
-    except RegistationFailed:
+    except RegistrationFailed as e:
         print("Registration failed")
+        print(e.args)
     finally:
         input("Press enter to continue")
 

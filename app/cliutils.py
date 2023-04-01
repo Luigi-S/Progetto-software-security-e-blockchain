@@ -3,7 +3,7 @@ from prettytable import PrettyTable
 import  getpass
 
 def sign():
-    # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
+    # funzione di login per accedere alla chiave di un account registrato per validare una transazione
     try:
         print("Insert credentials for ETH account")
         flag = True
@@ -31,7 +31,7 @@ def sign():
 
 
 def signWithAdress(address):
-    # funzione di login per accedere alla chiave di un account registrato per validare uan transazione
+    # funzione di login per accedere alla chiave di un account registrato per validare una transazione
     try:
         while True:
             try:
@@ -107,7 +107,7 @@ def insert_args(inputs):
             while flag:
                 try:
                     a = input(
-                        (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"]
+                        (inputs[i]["name"] if (inputs[i]["name"] != "") else "_") + " : " + inputs[i]["type"] + " "
                     )
                     a = input_type(a)
                     flag = False

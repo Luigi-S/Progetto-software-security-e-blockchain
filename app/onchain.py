@@ -1,7 +1,6 @@
 import os
 import warnings
 
-import web3
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -75,6 +74,7 @@ class OnChain():
                 print("Non valid input: impossible to find a deployable contract.")
 
         except TypeError:
+            # In realtà si può sollevare da altre fonti, ad esempio se path non è stringa...
             print("The used account has a private key that doesn't correspond to the public key")
         except Exception as e:
             print(e.__class__)
