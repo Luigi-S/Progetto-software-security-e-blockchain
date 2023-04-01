@@ -101,12 +101,12 @@ abstract contract AbstractManager is Ownable {
         string memory url = "";
         if(shardId < maxShard){
             url = shardList[shardId].url;
+            emit DeployUrl(url);
             oracle.notifyDeploy(msg.sender,url,name);
         }
         else{
             revert("No shard available for deploy");
         }
-        emit DeployUrl(url);
         //return url;
     }
 
