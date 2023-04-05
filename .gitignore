@@ -12,3 +12,4 @@ app/app/compiled_contracts/Contratto.json
 app/abi
 pwd.env
 core
+.vscode
