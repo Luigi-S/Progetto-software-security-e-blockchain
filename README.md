@@ -61,5 +61,5 @@ python -W ignore -m unittest discover -s ./test -p '\*TestSuite.py'
 
 > **Attenzione!** I test alterano lo stato delle blockchain *ethereum* e dell'applicazione.
 
-##Contributors
-#####Christopher Buratti - Matteo Cirilli - Alessio Paolucci - Vito Scaraggi - Luigi Smargiassi
+## Contributors
+##### Christopher Buratti - Matteo Cirilli - Alessio Paolucci - Vito Scaraggi - Luigi Smargiassi
