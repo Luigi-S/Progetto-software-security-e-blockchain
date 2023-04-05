@@ -25,7 +25,7 @@ abstract contract AbstractManager is Ownable {
     Contract [] public deployMap;
     
     //qui shard disponibili
-    Shard [] public shardList;
+    Shard [] shardList;
 
     //algoritmo selezionato
     uint8 private currentAlg;
@@ -75,14 +75,13 @@ abstract contract AbstractManager is Ownable {
 
     //util
     function getIdFromUrl(string calldata shardUrl) internal view returns(uint8){
-         uint8 shardId;
         for(uint8 i=0; i < shardList.length; i++){
-            if(keccak256(abi.encodePacked(shardList[i].url)) == keccak256(abi.encodePacked(shardUrl)) ){
-                shardId = i;
-                break;
+            if( bytes(shardList[i].url).length == bytes(shardUrl).length &&
+                keccak256(abi.encodePacked(shardList[i].url)) == keccak256(abi.encodePacked(shardUrl)) ){
+                return i;
             }
         }
-        return shardId;
+        return maxShard;
     }
 
     //utente
@@ -95,8 +94,20 @@ abstract contract AbstractManager is Ownable {
         return array;
     }
 
+    function getShardList() external view returns(Shard [] memory){
+        Shard [] memory array = new Shard[](shardList.length);
+        for(uint8 i=0; i < shardList.length; i++){
+            array[i] = shardList[i];
+        }
+        return array;
+    }
+
+    function getCurrentAlg() external view returns(uint8){
+        return currentAlg;
+    }
+
     //calcola shard per deploy
-    function reserveDeploy(string calldata name) external atLeastOneShard{ //returns(string memory){
+    function reserveDeploy(string calldata name) external atLeastOneShard{
         uint8 shardId = algs[currentAlg]();
         string memory url = "";
         if(shardId < maxShard){
@@ -107,7 +118,6 @@ abstract contract AbstractManager is Ownable {
         else{
             revert("No shard available for deploy");
         }
-        //return url;
     }
 
     //va chiamata solo dopo il deploy e la verifica dell'oracolo

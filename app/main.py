@@ -1,227 +1,246 @@
 """Various imports"""
-import json
 import re
-import getpass
-from click import Abort
 from web3.datastructures import AttributeDict
+from web3 import Web3
+from web3.exceptions import BadFunctionCallOutput
+from consolemenu.items import SubmenuItem, FunctionItem
+
 from onchain import OnChain, DeployMapError
 from Log import Logger, RegistrationFailed, InvalidAddress
 from call import Caller
-from cliutils import show_methods, select_method, get_contract, signWithAdress, get_methods
-from consolemenu import ConsoleMenu
-from consolemenu.items import FunctionItem, SubmenuItem
+from cliutils import show_methods, select_method, get_contract, get_abi, signWithAddress, get_methods, esc_input, hidden_esc_input
+from cliutils import SConsoleMenu
 
 TITLE = """
-     _______         _______  
-    |       \       |       \ 
-    | $$$$$$$\      | $$$$$$$\\
-    | $$__/ $$      | $$__/ $$
-    | $$    $$      | $$    $$
-    | $$$$$$$\      | $$$$$$$\\
-    | $$__/ $$      | $$__/ $$
-    | $$    $$      | $$    $$
-     \$$$$$$$        \$$$$$$$ 
-        --BLOCK BALANCER--
+         ______         _______  
+        |       \       |       \ 
+        | $$$$$$$\      | $$$$$$$\\
+        | $$__/ $$      | $$__/ $$
+        | $$    $$      | $$    $$
+        | $$$$$$$\      | $$$$$$$\\
+        | $$__/ $$      | $$__/ $$
+        | $$    $$      | $$    $$
+        \ $$$$$$$/      \ $$$$$$$/
+         
+            --BLOCK BALANCER--
 """
 
 ON_CHAIN = OnChain()
 
 def login():
     """Login menu."""
-    flag = True
-    while flag:
-        try:
-            print("Insert address (insert \"e\" to exit): ")
-            address = input()
-            if address == 'e' or address == 'E':
-                flag = False
-                raise KeyboardInterrupt
-            Logger(address)
-            flag = False
-        except KeyboardInterrupt:
-            flag = False
-            print("Login exited")
-            return None
-        except InvalidAddress:
-            print("Invalid address")
+    msg = ""
     try:
-        signWithAdress(address)
-        title = "User " + address
+        while True:
+            try:
+                address = esc_input("Insert your address")
+                Logger(address)
+                signWithAddress(address)
+                title = "User " + address
+                login_menu = SConsoleMenu(title, "Select a function ", exit_option_text="Logout")
+                deploy_item = FunctionItem("Deploy",function=deploy_menu, args=[str(address)], should_exit=False)
+                get_map = FunctionItem("Get Deploy Map", function=get_map_menu, should_exit=False)
+                call_item = FunctionItem("Call", function=call_menu, args=[str(address)], should_exit=False)
 
-        login_menu = ConsoleMenu(title, "Select a function ", exit_option_text="Logout")
-        deploy_item = FunctionItem("Deploy",function=deploy_menu, args=[str(address)], should_exit=False)
-        get_map = FunctionItem("Get Deploy Map", function=get_map_menu, should_exit=False)
-        call_item = FunctionItem("Call", function=call_menu, args=[str(address)], should_exit=False)
+                # Menu Admin
+                admin_menu = SConsoleMenu("Admin functions")
+                sharding_alg_item = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)],
+                                            should_exit=False)
+                shard_status_item = FunctionItem("Set Shard Status", function=setShardStatus, args=[str(address)],
+                                            should_exit=False)
+                admin_menu.append_item(sharding_alg_item)
+                admin_menu.append_item(shard_status_item)
+                admin_menu_item = SubmenuItem("Admin Submenu", submenu=admin_menu)
+                admin_menu_item.set_menu(login_menu)
 
-        # Menu Admin
-        admin_menu = ConsoleMenu("Admin functions")
-        sharding_alg_item = FunctionItem("Set Sharding Algorithm", function=changeShardingAlg, args=[str(address)],
-                                       should_exit=False)
-        shard_status_item = FunctionItem("Set Shard Status", function=setShardStatus, args=[str(address)],
-                                       should_exit=False)
-        admin_menu.append_item(sharding_alg_item)
-        admin_menu.append_item(shard_status_item)
-        admin_menu_item = SubmenuItem("Admin Submenu", submenu=admin_menu)
-        admin_menu_item.set_menu(login_menu)
+                # Once we're done creating them, we just add the items to the menu
+                login_menu.append_item(deploy_item)
+                login_menu.append_item(get_map)
+                login_menu.append_item(call_item)
+                login_menu.append_item(admin_menu_item)
 
-        # Once we're done creating them, we just add the items to the menu
-        login_menu.append_item(deploy_item)
-        login_menu.append_item(get_map)
-        login_menu.append_item(call_item)
-        login_menu.append_item(admin_menu_item)
-
-        # Finally, we call show to show the menu and allow the user to interact
-        login_menu.show()
+                # Finally, we call show to show the menu and allow the user to interact
+                login_menu.show()
+                msg = "Login successful!"
+                break
+            except InvalidAddress:
+                print("Invalid address")
+    
     except KeyboardInterrupt:
-        print("Login failed")
+        msg = "Login failed"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
+
+    return msg
 
 def deploy_menu(user:str):
     """Deploy menu."""
-    print("Insert path (file .sol): ")
-    path = input()
-    ON_CHAIN.deploySC(path, user)
-    input("Press enter to continue")
-
-# funzione a buon punto, manca exception handling, e reimpostare le regex finito lo sviluppo
-def register():
-    print("Registering an account")
+    msg = ""
     try:
-        address = str(input("Insert your address (starting with 0x and 40 characters long) "))
-        while re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is None:
-            print("Error: Address is not valid")
-            address = str(input("Insert your address (starting with 0x and 40 characters long) "))
-
-        password = str(getpass.getpass("Insert your password (minimum eight characters, at least one letter, one number and one special character) "))
-        # almeno una lettera, un numero, un carattere speciale:@$!%*#?&, almeno 8 caratteri
-        if re.match(pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$",
-                    string=password) is None:
-            print("Error: Weak password \n"
-                       " Minimum eight characters, at least one letter, one number and one special character")
-            password = str(getpass.getpass("Insert your password (minimum eight characters, at least one letter, one number and one special character) "))
-        private_key = str(getpass.getpass("Insert your private key (starting with 0x and 64 characters long) "))
-        if re.fullmatch(pattern="^0x[0-9a-fA-F]{64}", string=private_key) is None:
-            print("Error: Private key is not valid")
-            private_key = str(getpass.getpass("Private key: "))
-        logger = Logger(address)
-        logger.register(private_key, password)
-        print("Account registered!")
-    except Abort:
-        print("Closing...")
-        # TODO valutare su quali azioni fare rollback
-        print("Hello")
-    except RegistrationFailed as e:
-        print("Registration failed")
-        print(e.args)
+        while not bool(msg):
+            path = esc_input("Insert file .sol path")
+            msg = ON_CHAIN.deploySC(path, user)
+    except KeyboardInterrupt:
+        msg = "Deployment aborted"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
     finally:
-        input("Press enter to continue")
+        return msg
 
+def register():
+    msg = ""
+    try:
+        while True:
+            address = str(esc_input("Insert your address"))
+            if Web3.isAddress(address):
+                break
+            print("Error: Address is not valid")
+        while True:
+            password = str(hidden_esc_input(f"Insert password for {address} (min 8 characters, at least 1 letter, 1 digit and 1 special)"))
+            if re.match(pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$", string=password):
+                break
+            else: 
+                print("Error: Weak password")
+        logger = Logger(address)
+        while True:
+            private_key = str(hidden_esc_input("Insert private key"))
+            try:
+                logger.register(private_key, password)
+                msg = "Account successfully registered!"
+                break
+            except RegistrationFailed:
+                print("Error: Wrong account")
+            except Exception as e:
+                 print(f"{str(type(e))} {str(e)}")
+    except KeyboardInterrupt as e:
+        msg = "Registration failed"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
+    finally:
+        return msg
 
 def call(my_address):
-    try:
-        map = ON_CHAIN.getDeployMap()
-        ON_CHAIN.showDeployMap()
-        chain_link, contract_address = get_contract(map)
+    msg = ""
+    map = ON_CHAIN.getDeployMap()
+    print(ON_CHAIN.showDeployMap())
+    chain_link, contract_address = get_contract(map)
+    abi = get_abi()
+    caller = Caller(chain_link=chain_link, contract_address=contract_address, abi=abi)
+    methods = get_methods(abi)
+    show_methods(methods)
+    go_on = True
+    while go_on:
+        res = caller.method_call(select_method(methods), my_address)
+        if isinstance(res, AttributeDict) and "status" in res.keys():
+            if res.status == 1:
+                print("Transaction has been correctly sent")
+            else:
+                print("Transaction has been reverted...")
+                print("Tip: check your connection to the network and the account balance")
+        else:
+            print(res)
         flag = True
         while flag:
-            abi_path = input("Path to ABI ")
-            with open(abi_path) as f:
-                data = f.read()
-            abi = json.loads(data)
-            flag = False
-        caller = Caller(chain_link=chain_link, contract_address=contract_address, abi=abi)
-        methods = get_methods(abi)
-        show_methods(methods)
-        go_on = True
-        while go_on:
-            res = caller.method_call(select_method(methods), my_address)
-            if isinstance(res, AttributeDict) and "status" in res.keys():
-                if res.status == 1:
-                    print("Transaction has been correctly sent")
-                else:
-                    print("Transaction has been reverted...")
-                    print("Tip: check your connection to the network and the account balance")
-            else:
-                print(res)
-            print()
-            flag = True
-            while flag:
-                confirm = input('[c]ontinue on call or [b]ack main menu: ')
-                if confirm.strip().lower() == 'c':
-                    go_on = True
-                    flag = False
-                if confirm.strip().lower() == 'b':
-                    go_on = False
-                    flag = False
-    except IOError:
-        print("Could not access ABI file")
-    except json.decoder.JSONDecodeError:
-        print("File is not a JSON")
-    except Exception as e:
-        print(e.__class__)
-        print(e)
+            confirm = input('[c]ontinue on call or [q]uit: ')
+            if confirm.strip().lower() == 'c':
+                go_on = True
+                flag = False
+            if confirm.strip().lower() == 'q':
+                go_on = False
+                flag = False
+
+    return msg
 
 def call_menu(address):
+    msg = ""
     try:
-        call(address)
+        msg = call(address)
+    except BadFunctionCallOutput:
+        msg = "Could not transact with/call contract function"
+    except KeyboardInterrupt as e:
+        msg = "Method call interrupted"
     except Exception as e:
-        print(e.args)
-        print("Error on call (general)...")
+        msg = f"{str(type(e))} {str(e)}"
     finally:
-        input("Press enter to continue")
+        return msg
 
 def get_map_menu():
+    msg = ""
     try:
-        ON_CHAIN.showDeployMap()
-    except DeployMapError as e:
-        print("Error on getting deploy map...")
+        msg = ON_CHAIN.showDeployMap()
+    except DeployMapError:
+        msg = "Error on getting deploy map"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
     finally:
-        input("Press enter to continue")
+        return msg
 
 def changeShardingAlg(address):
-    flag = True
-    while flag:
-        try:
-            print("Insert sharding algorithm id: ")
-            id_alg = int(input())
-            flag = False
-        except ValueError:
-            print("Error: Insert a valid integer")
-    ON_CHAIN.setShardingAlgorithm(int(id_alg), address)
-    input("Press enter to continue")
+    msg = ""
+    try:
+        cur_alg = ON_CHAIN.getCurrentAlg()
+        print(f"Current Algorithm is {'Round Robin' if cur_alg == 0 else 'Min Deploys'}")
+        while True:
+            try:
+                id_alg = int(esc_input("Insert sharding algorithm id (0=Round Robin,1=Min Deploys)"))
+                if id_alg not in [0,1]:
+                    raise ValueError
+                msg = ON_CHAIN.setShardingAlgorithm(int(id_alg), address)
+                break
+            except ValueError:
+                print("Error: Insert a valid integer")
+    except KeyboardInterrupt:
+        msg = "Sharding algorithm unchanged"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
+    finally:
+        return msg
 
 def setShardStatus(address):
-    flag = True
-    while flag:
-        try:
-            print("Insert shard id: ")
-            id_shard = int(input())
-            flag = False
-        except ValueError:
-            print("Error: Insert a valid integer")
-    flag = True
-    while flag:
-        try:
-            print("Insert shard status (0 for false, 1 for true): ")
-            status = int(input())  # Fare in modo che si acquisisca solo 0 o 1
-            if status != 0 and status != 1:
-                raise Exception("Error: Insert a valid value")
-            flag = False
-        except Exception as e:
-            print(e)
-    ON_CHAIN.setShardStatus(int(id_shard), bool(status), address)
-    input("Press enter to continue")
+    msg = ''
+    try:
+        map = ON_CHAIN.getShardList()
+        print(ON_CHAIN.showShardList(map))
+        while True:
+            try:
+                id_shard = int(esc_input("Insert shard id"))
+                if id_shard < 0 or id_shard >= len(map):
+                    raise IndexError
+                break
+            except ValueError:
+                print("Error: Insert a valid integer")
+            except IndexError:
+                print("Index out of range")
+        
+        while True:
+            try:
+                status = int(esc_input("Insert shard status (1=Enabled, 0=Disabled)"))
+                if status not in [0,1]:
+                    raise ValueError("Error: Insert a valid value")
+                msg = ON_CHAIN.setShardStatus(int(id_shard), bool(status), address)
+                break
+            except ValueError as e:
+                print(e)
+    except KeyboardInterrupt as e:
+        msg = "Shard status unchanged"
+    #except ValueError as e:
+    #    msg = f"{dict(str(e)).get('message')}"
+    except Exception as e:
+        msg = f"{str(type(e))} {str(e)}"
+    finally:
+        return msg
 
 if __name__ == "__main__":
     # Create the menu
-    menu = ConsoleMenu(TITLE, "Progetto Software Security & Blockchain")
+    menu = SConsoleMenu(TITLE, "Progetto Software Security & Blockchain")
 
     # A FunctionItem runs a Python function when selected
     registrazione = FunctionItem("Register", register)
-    login = FunctionItem("Login", login)
+    _login = FunctionItem("Login", login)
 
     # Once we're done creating them, we just add the items to the menu
     menu.append_item(registrazione)
-    menu.append_item(login)
+    menu.append_item(_login)
 
     # Finally, we call show to show the menu and allow the user to interact
     menu.show()

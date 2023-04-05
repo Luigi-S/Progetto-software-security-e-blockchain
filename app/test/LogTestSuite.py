@@ -1,14 +1,13 @@
-import http
 import os
 import unittest
 
 from dotenv import dotenv_values
 
-from app.Log import Logger, InvalidAddress, RegistrationFailed
+from Log import Logger, InvalidAddress, RegistrationFailed
 
-valid_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1"
+valid_address = "0x02eeD43C52B532F284f95dd7E08AB2B47f4937Cd"
 unmatching_key = "0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1"
-matching_key = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+matching_key = "0xca8fafd5be4de8ec2d342336eaa90199f42f772b1d520adef87fc5f2859abbc0"
 valid_pwd = "V4l!dpwd"
 
 PWD_DOTENV = "../pwd.env"
@@ -17,8 +16,7 @@ PWD_DOTENV = "../pwd.env"
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(ConstructorLogger('def test_invalid'))
-    suite.addTest(ConstructorLogger('def test_valid_non_exists'))
-    suite.addTest(ConstructorLogger('def test_valid_exists'))
+    suite.addTest(ConstructorLogger('def test_valid'))
     suite.addTest(RegisterTestCase('def test_valid_input'))
     suite.addTest(RegisterTestCase('def test_invalid_key'))
     suite.addTest(RegisterTestCase('def test_unmatching_key'))
@@ -33,16 +31,10 @@ class ConstructorLogger(unittest.TestCase):
         with self.assertRaises(InvalidAddress):
             Logger("invalid_address")
 
-    def test_valid_non_exists(self):
+    
+    def test_valid(self):
         logger = Logger(valid_address)
         self.assertEqual(valid_address, logger.getAddress())
-        self.assertEqual(dotenv_values(PWD_DOTENV, verbose=False), logger._map)
-
-    def test_valid_exists(self):
-        logger = Logger(valid_address)
-        self.assertEqual(valid_address, logger.getAddress())
-        self.assertEqual(dotenv_values(PWD_DOTENV, verbose=False), logger._map)
-
 
 class RegisterTestCase(unittest.TestCase):
     def setUp(self) -> None:

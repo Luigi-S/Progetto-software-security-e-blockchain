@@ -18,7 +18,7 @@ class RegistrationFailed(Exception):
 class Logger:
 
     def __init__(self, address):
-        self.penv_path = os.path.realpath(os.path.dirname(__file__)) + "/../pwd.env"
+        self.penv_path = os.path.realpath(os.path.dirname(__file__)) + "/pwd.env"
         if re.fullmatch(pattern="^0x[0-9a-fA-F]{40}", string=address) is not None:
             self._address = address
         else:

@@ -5,19 +5,19 @@ from connection_host import ConnectionHost
 
 class Checker():
     
-    def __init__(self, caller, base_port, top_port):
+    def __init__(self, caller, base_port, top_port, ganache_host):
         self.caller = caller
         self.poll_interval = float(os.environ.get("POLL_INTERVAL"))
         self.w3_shard = {}
         self.filters = {}
         self.reserved_deploys = {}
         self.deploy_filter = self.caller.contract.events.DeployReserved.createFilter(fromBlock='latest')
-            
-        for port in range(base_port, top_port):
-            url = "ws://ganaches:" + str(port)
-            rev_url = url.replace("ganaches", "127.0.0.1")
-            self.w3_shard[rev_url] = ConnectionHost(url).connect()
-            self.filters[rev_url] = self.w3_shard[rev_url].eth.filter('latest')
+        #host = "0.0.0.0"
+        for port in range(base_port+1, top_port):
+            url = f"ws://{ganache_host}:{str(port)}"
+            #rev_url = url.replace(ganache_host, host)
+            self.w3_shard[url] = ConnectionHost(url).connect()
+            self.filters[url] = self.w3_shard[url].eth.filter('latest')
         
     def check_reserved(self):
         for event in self.deploy_filter.get_new_entries():
@@ -67,7 +67,7 @@ class Checker():
                                 print(f"Potential delete found in transaction log:\n    user={user}\n    shard={shard_url}\n    address={to}    \ntimestamp={timestamp}")
                                 self.caller.call("deleteFound", shard_url, to)
             except Exception as e:
-                print("Error [checker]: error occured in deploy loop\n" + str(type(e)) + " " + str(e))
+                print(f"Error [checker]: error occured in deploy loop\n{str(type(e))} {str(e)}")
 
             await asyncio.sleep(self.poll_interval)
 

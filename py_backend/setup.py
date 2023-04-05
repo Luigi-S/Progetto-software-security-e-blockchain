@@ -2,10 +2,10 @@ import os
 import codecs
 import json
 import sys
-
 from dotenv import load_dotenv
 from web3 import Web3
 from eth_keys import keys
+
 from deployer import Deployer
 from caller import Caller
 from checker import Checker
@@ -39,7 +39,10 @@ def main():
         if not ports_are_ok(PORTS, BASE_PORT):
             raise ValueError("ports are not valid")
         
-        URL = os.environ.get("URL")
+        #HOST = os.environ.get("HOST")
+        GANACHE_HOST = os.environ.get("GANACHE_HOST")
+        URL = f"ws://{GANACHE_HOST}:{BASE_PORT}" 
+        #HOST_URL = URL.replace(GANACHE_HOST, HOST)
 
         load_dotenv()
         manager_address = os.environ.get("MANAGER_ADDRESS")
@@ -65,12 +68,12 @@ def main():
             oracle_caller.call("setManager", manager_address)
             manager_caller.call("setOracle", oracle_address)
 
-            for port in range(BASE_PORT, BASE_PORT + PORTS):
-                url = "ws://127.0.0.1:" + str(port)
+            for port in range(BASE_PORT+1, BASE_PORT + PORTS):
+                url = f"ws://{GANACHE_HOST}:{str(port)}"
                 manager_caller.call("addShard", url, True)
             
             with open(".env", "w") as file:
-                file.write(f"URL={URL}\nMANAGER_ADDRESS={manager_address}\nORACLE_ADDRESS={oracle_address}")
+                file.write(f"MANAGER_ADDRESS={manager_address}\nORACLE_ADDRESS={oracle_address}")
         else:
             manager_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, manager_address, manager_abi)
             oracle_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, oracle_address, oracle_abi)
@@ -83,11 +86,14 @@ def main():
         with open("abi/Oracle.json", "r") as file:
             oracle_abi = json.load(file)
             oracle_caller = Caller(URL, ADMIN_ADDRESS, ADMIN_PK, oracle_address, oracle_abi)
-            checker = Checker(oracle_caller, BASE_PORT, BASE_PORT + PORTS)
-            checker.start()
-    
+            checker = Checker(oracle_caller, BASE_PORT, BASE_PORT + PORTS, GANACHE_HOST)
+        
+        os.system("python api.py &")
+
+        checker.start()
+
     except Exception as e:
-        print("Error [setup]: " + str(type(e)) + " " + str(e))
+        print(f"Error [setup]: {str(type(e))}  {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ from solcx import compile_standard
 from ConnectionHost import ConnectionHost
 
 ABI_FOLDER = "abi"
-
+SOLC_VERSION = os.environ.get("SOLC_VERSION")
 def compile(contract_path):
     try:
         contract_name = os.path.basename(contract_path)
@@ -30,10 +30,11 @@ def compile(contract_path):
                     }
                 },
             },
+            solc_version=SOLC_VERSION
         )
 
-        if not os.path.exists("app/" + ABI_FOLDER):
-            os.makedirs("app/" + ABI_FOLDER)
+        if not os.path.exists(os.path.realpath(os.path.dirname(__file__)) + "/" + ABI_FOLDER):
+            os.makedirs(os.path.realpath(os.path.dirname(__file__)) + "/" + ABI_FOLDER)
 
         # Crea il file.json di ogni contratto deployato contenente l'abi di esso
         for contract in compiled_sol["contracts"][contract_name]:
@@ -55,15 +56,17 @@ def compile(contract_path):
         return bytecode, abi
 
 
-    except solcx.exceptions.SolcError as e:
+    except SolcError:
         print("ERROR: the file .sol isn't syntactically correct.")
     except binascii.Error as e1:
         print("ERROR: the file doesn't contains a valid bytecode.")
         print(e1)
     except UnboundLocalError as e2:  # se la compilazione del bytecode non va a buon fine, "bytecode" non è inizializzata
-        print("")
+        print("ERROR: not compiled")
     except TypeError as e3:
         print(e3)
+    except IOError:
+        print("ERRO: I/O error")
     except Exception as e4:
         print("ERROR: system error occurred.")
         print(e4)

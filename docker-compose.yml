@@ -1,23 +1,46 @@
 version: '3'
 services:
+  app:
+    build: ./app
+    image: bb_client:1.0
+    container_name: app
+    volumes:
+      - ./app/:/app/
+    depends_on:
+      py_backend:
+          condition: service_healthy
+    env_file:
+      - .env
+    links:
+      - py_backend
   py_backend:
     build: ./py_backend
     image: py_backend:1.0
-    container_name: py_backend
+    container_name: "${PY_BACKEND_HOST}"
     volumes:
       - ./py_backend/:/py_backend/
     depends_on:
       - ganaches
     env_file:
+      - config.env
       - .env
-  
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "healthcheck.py"]
+      interval: 3s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "${API_PORT}:${API_PORT}"
   ganaches:
     build: ./ganache
     image: ganaches:1.0
-    container_name: ganaches
+    container_name: "${GANACHE_HOST}"
     volumes:
       - ./ganache:/ganache
     env_file:
       - .env
     ports:
       - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
+    restart: on-failure

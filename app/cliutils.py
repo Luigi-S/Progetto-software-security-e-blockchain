@@ -1,54 +1,21 @@
-from Log import Logger
 from prettytable import PrettyTable
+from consolemenu import ConsoleMenu
+from consolemenu.items import FunctionItem
 import  getpass
+import json
 
-def sign():
+from Log import Logger, RegistrationFailed
+
+def signWithAddress(address):
     # funzione di login per accedere alla chiave di un account registrato per validare una transazione
-    try:
-        print("Insert credentials for ETH account")
-        flag = True
-        while flag:
-            try:
-                logger = Logger(input("Address "))
-                flag = False
-            except Exception as e:
-                print("Could not log")
-                if e.args != ():
-                    print(e.args[0])
-        while True:
-            try:
-                key = logger.getKey(passwd=getpass.getpass(prompt="Password for " + str(logger.getAddress()) + " "))
-                return logger.getAddress(), key
-            except Exception as e:
-                print("Wrong password")
-                print(e)
-    except Exception as e:
-        # handling da migliorare.
-        print("Login failed")
-        if e.args != ():
-            print(e.args[0])
-        exit(1)
-
-
-def signWithAdress(address):
-    # funzione di login per accedere alla chiave di un account registrato per validare una transazione
-    try:
-        while True:
-            try:
-                logger = Logger(address)
-                password = getpass.getpass(prompt="Password for " + str(logger.getAddress()) + "(insert \"e\" to exit): ")
-                if password == "e" or password == "E":
-                    raise KeyboardInterrupt
-                key = logger.getKey(passwd=password)
-                return key
-            except Exception as e:
-                print("Wrong password")
-    except Exception as e:
-        # handling da migliorare.
-        print("Login failed")
-        if e.args != ():
-            print(e.args[0])
-        exit(1)
+    logger = Logger(address)
+    while True:
+        try:
+            password = hidden_esc_input(f"Insert password for {str(logger.getAddress())}")
+            key = logger.getKey(passwd=password)
+            return key
+        except RegistrationFailed:
+            print("Wrong password")
 
 
 def show_methods(methods):
@@ -85,7 +52,7 @@ def get_methods(abi):
 def select_method(methods):
     while True:
         try:
-            index = int(input("Which method do you wish to call? "))
+            index = int(esc_input("Insert a valid method index"))
             if index < 0:
                 raise IndexError
             return methods[index][-1]
@@ -126,15 +93,46 @@ def insert_args(inputs):
 def get_contract(deploy_map):
     while True:
         try:
-            index = int(input("Insert a valid index for a contract: "))
+            index = int(esc_input("Insert a valid index for a contract"))
             if index < 0:
                 raise IndexError
             return deploy_map[index][1], deploy_map[index][2]
         except ValueError:
             print("Invalid index selected")
-        except IndexError as e:
+        except IndexError:
             print("Index out of range")
-        except Exception as e:
-            print(e.__class__)
-            print(e)
 
+def get_abi():
+    while True:
+        try:
+            abi_path = esc_input("Insert path to ABI")
+            with open(abi_path) as f:
+                data = f.read()
+            return json.loads(data)
+        except IOError:
+            print("Could not access ABI file")
+        except json.decoder.JSONDecodeError:
+            print("File is not a JSON")
+
+def esc_input(text = "Insert"):
+    print(f"{text} or [q]uit:")
+    x = input()
+    if x == 'q':
+        raise KeyboardInterrupt
+    return x
+
+def hidden_esc_input(text = "Insert"):
+    x = getpass.getpass(prompt=f"{text} or [q]uit:")
+    if x == 'q':
+        raise KeyboardInterrupt
+    return x
+
+class SConsoleMenu(ConsoleMenu):
+     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+     def draw(self, *args, **kwargs):
+         if isinstance(self.selected_item, FunctionItem):
+            if self.selected_item.get_return():
+                print(self.selected_item.get_return())
+         super().draw()
