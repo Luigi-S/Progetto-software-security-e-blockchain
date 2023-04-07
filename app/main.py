@@ -4,6 +4,7 @@ from web3.datastructures import AttributeDict
 from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput
 from consolemenu.items import SubmenuItem, FunctionItem
+import warnings
 
 from onchain import OnChain, DeployMapError
 from Log import Logger, RegistrationFailed, InvalidAddress
@@ -231,6 +232,7 @@ def setShardStatus(address):
         return msg
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
     # Create the menu
     menu = SConsoleMenu(TITLE, "Progetto Software Security & Blockchain")
 

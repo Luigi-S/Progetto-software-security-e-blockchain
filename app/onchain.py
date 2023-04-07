@@ -1,5 +1,4 @@
 import os
-import warnings
 from pathlib import Path
 from web3 import Web3
 from web3.exceptions import ValidationError, ContractLogicError
@@ -46,7 +45,7 @@ class OnChain():
         try:
             target = Path(path_file)
             if not target.exists():
-                print("The target directory doesn't exist.")
+                print("The target does not exist")
                 #print("Tip: if you tried to insert a file name, you have to specify the correct format.")
             elif not target.is_dir():
                 if target.suffix == ".sol":
@@ -60,7 +59,6 @@ class OnChain():
                             tuple([elem]),
                             private_key
                         )
-                        warnings.filterwarnings("ignore")
                         event = self.manager.contract.events.DeployUrl().processReceipt(receipt)
                         url = event[0].args["url"]
                         #print("The contract is ready to be deployed to the shard at the url: " + str(url))
@@ -74,9 +72,9 @@ class OnChain():
             else:
                 msg = "Non valid input: impossible to find a deployable contract"
 
-        except TypeError:
+        #except TypeError:
             # In realtà si può sollevare da altre fonti, ad esempio se path non è stringa...
-            msg = "The used account has a private key that doesn't correspond to the public key"
+            #msg = "The used account has a private key that doesn't correspond to the public key"
             #msg = f"{str(type(e))} {str(e)}"
         except IOError:
             msg = "ERROR: I/O error"
