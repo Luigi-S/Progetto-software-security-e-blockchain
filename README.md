@@ -53,13 +53,40 @@ per deployare uno *smart contract*, visualizzare la mappa dei *deployments*, chi
 
 Qui l'*admin*, ovvero l'*owner* del contratto *Manager*, può impostare un nuovo algoritmo di *sharding* o cambiare lo stato di disponibilità di una blockchain (shard). Gli utenti base possono ugualmente navigare in questo *submenu* ma l'invocazione delle *admin functions* risulterà in un errore.
 
+Il file 'account.txt' lista tutti gli *account Ethereum* generati da *ganache* con un bilancio non nullo di ETH. In fase di registrazione occorre scegliere uno di questi *account* e immettere la relativa coppia *address* - *private key*. Il primo *account* della lista è l'amministratore.
+
+La cartella '/app/sc' contiene alcuni *smart contract* di prova per fare il *deployment*; nella cartella '/app/abi' si trovano le ABI dei contratti deployati durante l'utilizzo dell'applicazione.
+
 Dal terminale del container *app*,  nel *path* '/app', è possibile lanciare gli *unit test* con il comando:
 
 ```
-python -W ignore -m unittest discover -s ./test -p '\*TestSuite.py'
+python -W ignore -m unittest discover -s ./test -p '*TestSuite.py'
 ```
 
-> **Attenzione!** I test alterano lo stato delle blockchain *ethereum* e dell'applicazione.
+> **Attenzione!** I test alterano lo stato delle blockchain *ethereum* e dell'applicazione. Per ripristinarlo si consiglia di interrompere e successivamente resettare l'applicazione.
+
+## Configurazione
+I file `.env` e `config.env` presenti nella *root* di progetto contengono alcuni parametri di configurazione predefiniti per il sistema. Nel file `.env`:
+
+- **BASE_PORT** (default: 10000, min: 1025) è la porta a partire dalla quale vengono istanziate le *blockchain*. La *blockchain* di gestione è in ascolto sulla porta BASE_PORT; gli *shard* sono in ascolto sulle porte successive 
+- **PORTS** (default: 4, min: 2, max: 10) è il numero di porte occupate, ovvero il numero di *blockchain*
+- **SOLC_VERSION** (default: 0.8.18) è la versione del compilatore Solidity
+- **GANACHE_HOST** (default: ganaches) è il nome del *container* che ospita le *blockchain ganache*
+- **PY_BACKEND_HOST** (default: py_backend) è il nome del *container* che ospita il *back-end* in Python
+- **API_PORT** (default: 5000) è la porta del *web server* in Flask 
+
+Nel file `config.env`:
+- **POLL_INTERVAL** (default: 0.5) è l'intervallo di tempo in secondi tra due *polling* consecutivi delle transazioni degli *shard*
+- **ADMIN_ADDRESS** è l'address dell'utente amministratore
+- **ADMIN_PK** è la chiave privata dell'utente amministratore
+
+Se si desidera modificare i parametri di configurazione dell'applicazione occorre prestare attenzione ai seguenti vincoli:
+
+1. vincoli sul tipo e la forma dei parametri
+2. i parametri **BASE_PORT** e **PORTS** devono essere interi positivi tali BASE_PORT + PORTS $\leq$ 65535
+3. **ADMIN_ADDRESS** e **ADMIN_PK** devono appartenere a un account *ethereum* valido
+
+In caso di parametri malformati verrà generato un errore.
 
 ## Contributors
-##### Christopher Buratti - Matteo Cirilli - Alessio Paolucci - Vito Scaraggi - Luigi Smargiassi
+#### Christopher Buratti - Matteo Cirilli - Alessio Paolucci - Vito Scaraggi - Luigi Smargiassi

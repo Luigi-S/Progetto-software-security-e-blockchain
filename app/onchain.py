@@ -72,10 +72,10 @@ class OnChain():
             else:
                 msg = "Non valid input: impossible to find a deployable contract"
 
-        #except TypeError:
+        except TypeError as e:
             # In realtà si può sollevare da altre fonti, ad esempio se path non è stringa...
             #msg = "The used account has a private key that doesn't correspond to the public key"
-            #msg = f"{str(type(e))} {str(e)}"
+            msg = f"{str(type(e))} {str(e)}"
         except IOError:
             msg = "ERROR: I/O error"
         finally:
@@ -146,7 +146,7 @@ class OnChain():
 
     def showShardList(self, map):
         pt = PrettyTable()
-        pt.field_names = ["Id","Shard Url", "Status", "Deployments"]
+        pt.field_names = ["Id","Shard Url", "Active", "Deployments"]
         for sc in map:
             pt.add_row(sc)
         return str(pt)

@@ -38,14 +38,14 @@ class OnChainDeployTestCase(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_target_non_existent(self, stdout):
         self.onchain.deploySC("non-valid-path", valid_address, matching_key)
-        expected_out = "The target directory doesn't exist.\n"
+        expected_out = "The target does not exist"
         self.assertTrue(expected_out in stdout.getvalue())
 
     
     @patch('sys.stdout', new_callable=StringIO)
     def test_target_non_string(self, stdout):
         self.onchain.deploySC(3, valid_address, matching_key)
-        expected_out = "The used account has a private key that doesn't correspond to the public key"
+        expected_out = "TypeError"
         self.assertTrue(expected_out in stdout.getvalue())
     
     @patch('sys.stdout', new_callable=StringIO)

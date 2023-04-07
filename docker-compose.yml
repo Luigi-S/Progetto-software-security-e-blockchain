@@ -41,6 +41,4 @@ services:
       - ./ganache:/ganache
     env_file:
       - .env
-    ports:
-      - "${BASE_PORT}-${TOP_PORT}:${BASE_PORT}-${TOP_PORT}"
     restart: on-failure
