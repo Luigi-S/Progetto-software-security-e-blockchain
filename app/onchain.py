@@ -73,11 +73,11 @@ class OnChain():
                 msg = "Non valid input: impossible to find a deployable contract"
 
         except TypeError as e:
-            # In realtà si può sollevare da altre fonti, ad esempio se path non è stringa...
-            #msg = "The used account has a private key that doesn't correspond to the public key"
             msg = f"{str(type(e))} {str(e)}"
         except IOError:
             msg = "ERROR: I/O error"
+        except ValueError as e:
+            msg = f"{str(type(e))} {str(e)}"
         finally:
             print(msg)
             return msg

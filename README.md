@@ -13,21 +13,23 @@
 
 BlockBalancer é una dApp che implementa un prototipo di ***load balancer*** per gli ***smart contract*** deployati su un insieme di blockchain Ethereum.
 
-## Guida all'utilizzo (Linux o MacOS)
-Per utilizzare l'applicazione è necessario installare sul proprio sistema `docker` e `docker-compose`.
+## Guida all'utilizzo
+Per utilizzare l'applicazione è necessario installare sul proprio sistema `docker` e `docker-compose`. In caso di OS Windows occorre installare anche `wsl` (*Windows Subsystem for Linux*).
 
 Clonare il repository con:
 ```
 git clone https://github.com/Luigi-S/Progetto-software-security-e-blockchain.git
 ```
 
-Posizionandosi nella cartella di progetto eseguire `install.sh` per creare le immagini docker necessarie.
+Posizionandosi nella cartella di progetto, eseguire `install.sh` per creare le immagini docker necessarie.
 
 Nello stesso *path* è possibile eseguire gli script:
 - `start.sh` per avviare l'applicazione
 - `stop.sh` per chiudere l'applicazione
 - `reset.sh` per cancellare lo stato dell'applicazione (account salvati, stato della blockchain, ABI dei contratti deployati)
 - `uninstall.sh` per eliminare le immagini docker create (ma non le dipendenze)
+
+In caso di OS Windows eseguire gli stessi *script* ma con estensione *.cmd*.
 
 Potrebbe essere necessario abilitare l'*execute permission* degli script *bash* o eseguirli con ruolo di super-utente.
 
@@ -76,15 +78,15 @@ I file `.env` e `config.env` presenti nella *root* di progetto contengono alcuni
 - **API_PORT** (default: 5000) è la porta del *web server* in Flask 
 
 Nel file `config.env`:
-- **POLL_INTERVAL** (default: 0.5) è l'intervallo di tempo in secondi tra due *polling* consecutivi delle transazioni degli *shard*
+- **POLL_INTERVAL** (default: 0.5) è l'intervallo di tempo in secondi tra due *polling* consecutivi delle nuove transazioni degli *shard*
 - **ADMIN_ADDRESS** è l'address dell'utente amministratore
 - **ADMIN_PK** è la chiave privata dell'utente amministratore
 
 Se si desidera modificare i parametri di configurazione dell'applicazione occorre prestare attenzione ai seguenti vincoli:
 
 1. vincoli sul tipo e la forma dei parametri
-2. i parametri **BASE_PORT** e **PORTS** devono essere interi positivi tali BASE_PORT + PORTS $\leq$ 65535
-3. **ADMIN_ADDRESS** e **ADMIN_PK** devono appartenere a un account *ethereum* valido
+2. i parametri **BASE_PORT** e **PORTS** devono essere tali che BASE_PORT + PORTS $\leq$ 65535
+3. **ADMIN_ADDRESS** e **ADMIN_PK** devono riferirsi a un account *ethereum* valido generato da *ganache*, cioè presente in 'accounts.txt'
 
 In caso di parametri malformati verrà generato un errore.
 

@@ -2,7 +2,7 @@
 /.idea/
 __pycache__
 *.pyc
-/ganache/db_*
+/ganache/data/db_*
 artifacts
 */.deps
 */swarm

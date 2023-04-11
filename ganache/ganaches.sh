@@ -33,9 +33,10 @@ if (( $base_port < 1025 )) || (( $base_port + $ports > 65535 )); then
 	exit 1
 fi
 
+mkdir "data"
 for (( i = 0 ; i < $ports ; i += 1 )) ; do
-	mkdir "db_$i"
-	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "db_$i" -m "myth like bonus scare over problem client lizard pioneer submit female collect" -a 10 -e 10000 --wallet.accountKeysPath "db_$i/keys.json") &
+	mkdir "data/db_$i"
+	(node "/app/dist/node/cli.js" -p $(($base_port + $i)) --database.dbPath "data/db_$i" -m "myth like bonus scare over problem client lizard pioneer submit female collect" -a 10 -e 10000 --wallet.accountKeysPath "data/db_$i/keys.json") &
 done
 
 wait
