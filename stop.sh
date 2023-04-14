@@ -1,1 +1,1 @@
-docker-compose down -t 0
+docker compose down -t 0
