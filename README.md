@@ -14,7 +14,7 @@
 BlockBalancer é una dApp che implementa un prototipo di ***load balancer*** per gli ***smart contract*** deployati su un insieme di blockchain Ethereum.
 
 ## Guida all'utilizzo
-Per utilizzare l'applicazione è necessario installare sul proprio sistema `docker` e `docker-compose`. In caso di OS Windows occorre installare anche `wsl` (*Windows Subsystem for Linux*).
+Per utilizzare l'applicazione è necessario installare sul proprio sistema `docker` e `docker compose V2`. In caso di OS Windows occorre installare anche `wsl` (*Windows Subsystem for Linux*).
 
 Clonare il repository con:
 ```
