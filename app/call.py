@@ -11,7 +11,7 @@ class Caller:
             self.w3 = ConnectionHost(chain_link).connect()
             self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
         except ValueError as e:
-            print(f"{str(type(e))} {str(e)}")
+            print(f"{str(e)}")
             raise Exception("File does not contain an ABI")
 
     def get_abi(self):

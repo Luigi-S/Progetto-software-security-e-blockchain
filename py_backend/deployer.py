@@ -64,13 +64,10 @@ class Deployer():
         except binascii.Error:
             print("File does not contain a valid bytecode.")
         except UnboundLocalError as e:
-            print(e.__class__)
             print(e)
         except TypeError as e:
-            print(e.__class__)
             print(e)
         except Exception as e:
-            print(e.__class__)
             print(e)
         
         return ret_bytecode, ret_abi
@@ -95,14 +92,10 @@ class Deployer():
         except binascii.Error:
             print("File does not contain a valid bytecode.")
         except KeyError as e:
-            print(e.__class__)
             print(e)
         except UnboundLocalError as e:
-            print(e.__class__)
             print(e)
         except TypeError as e:
-            print(e.__class__)
             print(e)
         except Exception as e:
-            print(e.__class__)
             print(e)

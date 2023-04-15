@@ -29,10 +29,8 @@ services:
       test: ["CMD", "python", "healthcheck.py"]
       interval: 3s
       timeout: 30s
-      retries: 10
+      retries: 5
       start_period: 2s
-    #ports:
-      #- "${API_PORT}:${API_PORT}"
   ganaches:
     build: ./ganache
     image: ganaches:1.0

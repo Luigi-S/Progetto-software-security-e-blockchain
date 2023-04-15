@@ -35,7 +35,7 @@ class OnChain():
                               chain_link=self.manager_shard)
         except Exception as e:
             print("SYSTEM ERROR: Impossible to load configurations")
-            print(f"{str(type(e))} {str(e)}")
+            print(f"{str(e)}")
             raise SystemExit(1)
 
           # .get_contract()
@@ -73,11 +73,11 @@ class OnChain():
                 msg = "Non valid input: impossible to find a deployable contract"
 
         except TypeError as e:
-            msg = f"{str(type(e))} {str(e)}"
+            msg = f"{str(e)}"
         except IOError:
             msg = "ERROR: I/O error"
         except ValueError as e:
-            msg = f"{str(type(e))} {str(e)}"
+            msg = f"{str(e)}"
         finally:
             print(msg)
             return msg

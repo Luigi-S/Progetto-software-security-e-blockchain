@@ -70,7 +70,7 @@ def login():
     except KeyboardInterrupt:
         msg = "Login failed"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
 
     return msg
 
@@ -84,7 +84,7 @@ def deploy_menu(user:str):
     except KeyboardInterrupt:
         msg = "Deployment aborted"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 
@@ -112,11 +112,11 @@ def register():
             except RegistrationFailed:
                 print("Error: Wrong account")
             except Exception as e:
-                 print(f"{str(type(e))} {str(e)}")
+                 print(f"{str(e)}")
     except KeyboardInterrupt as e:
         msg = "Registration failed"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 
@@ -161,7 +161,7 @@ def call_menu(address):
     except KeyboardInterrupt as e:
         msg = "Method call interrupted"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 
@@ -172,7 +172,7 @@ def get_map_menu():
     except DeployMapError:
         msg = "Error on getting deploy map"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 
@@ -193,7 +193,7 @@ def changeShardingAlg(address):
     except KeyboardInterrupt:
         msg = "Sharding algorithm unchanged"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 
@@ -227,7 +227,7 @@ def setShardStatus(address):
     #except ValueError as e:
     #    msg = f"{dict(str(e)).get('message')}"
     except Exception as e:
-        msg = f"{str(type(e))} {str(e)}"
+        msg = f"{str(e)}"
     finally:
         return msg
 

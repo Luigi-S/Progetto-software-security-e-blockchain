@@ -4,17 +4,25 @@ pragma solidity >=0.6.0 <0.9.0;
 
 contract Prova {
 
-    uint256 matricola;
-
-    struct Studente {
-        uint256 matricola;
-        string nome;
+    struct Person {
+        uint256 mat;
+        string name;
+        bytes random_bytes;
+        bool sex;
+        string [] hobbies;
+        uint8 [2][2] lucky_matrix;
     }
 
-    Studente[] public lista_studenti;
-    mapping(string => uint256) public nome_matricola;
+    Person [] public people;
 
-    function store(uint256 _numero) public {
-        matricola = _numero;
+    function addPerson(uint256 mat, string calldata name, 
+                        bytes calldata random_bytes, bool sex,
+                        string [] calldata hobbies, uint8[2][2] calldata lucky_matrix) public {
+        Person memory p = Person(mat, name, random_bytes, sex, hobbies, lucky_matrix);
+        people.push(p); 
+    }
+
+    function getPerson(uint256 index) public view returns (Person memory){
+        return people[index];
     }
 }
