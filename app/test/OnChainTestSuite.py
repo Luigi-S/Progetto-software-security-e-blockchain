@@ -45,7 +45,7 @@ class OnChainDeployTestCase(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_target_non_string(self, stdout):
         self.onchain.deploySC(3, valid_address, matching_key)
-        expected_out = "TypeError"
+        expected_out = "TypeERROR"
         self.assertTrue(expected_out in stdout.getvalue())
     
     @patch('sys.stdout', new_callable=StringIO)

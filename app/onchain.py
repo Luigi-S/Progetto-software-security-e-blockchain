@@ -73,7 +73,7 @@ class OnChain():
                 msg = "Non valid input: impossible to find a deployable contract"
 
         except TypeError as e:
-            msg = f"{str(e)}"
+            msg = f"TypeERROR: {str(e)}"
         except IOError:
             msg = "ERROR: I/O error"
         except ValueError as e:
